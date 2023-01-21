@@ -1,0 +1,114 @@
+const { SlashCommandBuilder, Guild, EmbedBuilder } = require("discord.js");
+const { masterQueue } = require('../index');
+const getYoutubeTitle = require('get-youtube-title');
+require('dotenv').config();
+const API_KEY = process.env.API_KEY
+const Spotify = require('spotifydl-core').default;
+
+const spotifyCredentials = {
+    clientId: '4918ed15767d429695e6fbb30e73f713',
+    clientSecret: '48e6f6221d824805bf47dbfe37bfa713'
+}
+const spotify = new Spotify(spotifyCredentials);
+
+//Saw a bug a couple times where queue only showed 4 songs, no clue how to recreate
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('queue')
+        .setDescription('Displays the next five songs in the queue - UNDER CONSTRUCTION'),
+    async execute(interaction) {
+        let queue = this.getQueue(interaction.guildId);
+        console.log(queue)
+
+        let videoIds = []
+        for (let i = 0; i < queue.length; i++) {
+            let videoId;
+            if (queue[i].includes('spotify')) {
+                videoId = queue[i]
+            } else {
+                videoId = queue[i].split('v=')[1]
+                if (videoId.includes('&')) {
+                    videoId = videoId.split('&')[0]
+                }
+            }
+
+            videoIds.push(videoId)
+        }
+
+        //Sets up framework for moving farther into queue with arrow reactions
+        let start = 0;
+        let limit;
+        if (videoIds.length - start > 5) {
+            limit = 5
+        } else {
+            limit = videoIds.length - start
+        }
+
+        console.log('limit: ' + limit)
+
+        await this.getTitles(interaction, videoIds, start, '', start, limit)
+    },
+    getQueue(guildId) {
+        let queue = []
+        for (let i = 0; i < masterQueue.length; i++) {
+            if (masterQueue[i][0] == guildId) {
+                queue.push(masterQueue[i][1]);
+            }
+        }
+        return queue
+    },
+    async getTitles(interaction, videoIds, numTitles, startText, ogNumTitle, limit) {
+        //Recursive, goes through itself *limit* times, only outputs one the fifth time
+        //Probably not amazing but fixed problem where ending code ran before callback functions
+        //Could prob make for loop where reply inside callback  (Tried this, didn't work, callbacks were still called in a random order)
+        if (numTitles < ogNumTitle + limit) {
+            if (videoIds[numTitles].includes('spotify')) {
+                await spotify.getTrack(videoIds[numTitles]).then(async (title) => {
+                    startText += (numTitles + 1) + ': ' + title.name + '\n';
+
+                    let test = await this.getTitles(interaction, videoIds, numTitles + 1, startText, ogNumTitle, limit)
+                    if (test) {
+                        startText = test + startText
+                    }
+
+                    if (numTitles == ogNumTitle + limit - 1) {
+                        await interaction.reply(`\`\`\`---QUEUE---\n${startText}\`\`\``)
+                    }
+                    return startText;
+                })
+            } else {
+                getYoutubeTitle(videoIds[numTitles], API_KEY, async (err, title) => {
+                    if (err) {
+                        console.error(err)
+                    } else {
+                        startText += (numTitles + 1) + ': ' + title + '\n';
+                    }
+                    let test = await this.getTitles(interaction, videoIds, numTitles + 1, startText, ogNumTitle, limit)
+                    if (test) {
+                        startText = test + startText
+                    }
+
+                    if (numTitles == ogNumTitle + limit - 1) {
+                        //await interaction.reply(':sob:')
+                        await interaction.reply(`QUEUE \`\`\`${startText}\`\`\``)
+                    }
+                    return startText;
+                })
+            }
+        }
+    }, createOutput(text) { //Trying to create an embed to pretty up queue display, UNDER CONSTUCTION
+        const outputEmbed = new EmbedBuilder()
+            .setColor(0x0099FF)
+            .setTitle('Queue')
+            .setURL('https://www.pictureofhotdog.com/')
+            .setAuthor({ name: 'Some name', iconURL: 'https://i.imgur.com/AfFp7pu.png', url: 'https://discord.js.org' })
+            .setDescription('Descriptionda')
+            .setThumbnail('https://images.squarespace-cdn.com/content/v1/5dd8630d09ab5908e35b35a0/1574463308006-PDSJDF9EEEB0TJG7TL1N/img-HotDogStock-1080x675.png?format=500w')
+            .addFields(
+                { name: text }
+            )
+            .setTimestamp();
+
+        return outputEmbed;
+    }
+}
