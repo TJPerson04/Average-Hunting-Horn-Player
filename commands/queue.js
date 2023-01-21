@@ -2,12 +2,12 @@ const { SlashCommandBuilder, Guild, EmbedBuilder } = require("discord.js");
 const { masterQueue } = require('../index');
 const getYoutubeTitle = require('get-youtube-title');
 require('dotenv').config();
-const API_KEY = process.env.API_KEY
+const API_KEY = process.env.GOOGLE_API_KEY
 const Spotify = require('spotifydl-core').default;
 
 const spotifyCredentials = {
-    clientId: '4918ed15767d429695e6fbb30e73f713',
-    clientSecret: '48e6f6221d824805bf47dbfe37bfa713'
+    clientId: process.env.spotifyClientId,
+    clientSecret: process.env.spotifyClientSecret
 }
 const spotify = new Spotify(spotifyCredentials);
 

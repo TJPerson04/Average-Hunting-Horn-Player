@@ -8,14 +8,10 @@ const { masterQueue } = require('../index');
 const ytConverter = require('yt-converter');
 const fs = require('fs');
 const PlaylistSummary = require('youtube-playlist-summary')
-//const ytlist = require('youtube-playlist');
-//const ytAPI_KEY = 'AIzaSyBL2Kk6Ui2WvtQsxbROeAftoEbgk7HFH8c';
-//const ytdl = require('ytdl-core');
-//const { createReadStream } = require('node:fs');
 
 const spotifyCredentials = {
-    clientId: '4918ed15767d429695e6fbb30e73f713',  //Should probably move these to the .env file
-    clientSecret: '48e6f6221d824805bf47dbfe37bfa713'
+    clientId: process.env.spotifyClientId,
+    clientSecret: process.env.spotifyClientSecret
 }
 const spotify = new Spotify(spotifyCredentials);
 
@@ -68,7 +64,7 @@ module.exports = {
 
         if (url.includes('playlist') && url.includes('youtube')) {
             const config = {
-                GOOGLE_API_KEY: 'AIzaSyBL2Kk6Ui2WvtQsxbROeAftoEbgk7HFH8c', // require
+                GOOGLE_API_KEY: process.env.GOOGLE_API_KEY, // require
                 PLAYLIST_ITEM_KEY: ['videoUrl'], // option
             }
 
