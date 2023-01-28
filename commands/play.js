@@ -247,6 +247,8 @@ module.exports = {
 
         player.on('error', err => {
             console.error(err);
+            player.play(createAudioResource(__dirname + '\\..\\portal_radio.mp3'));
+            player.stop();
         })
     },
     //Creates server specific queue
