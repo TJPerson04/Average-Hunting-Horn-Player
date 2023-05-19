@@ -53,6 +53,20 @@ module.exports = {
             })
         }
 
+        //I have absolutely no clue what this bit of code does, stole it off the internet and it fixed a bug
+        const networkStateChangeHandler = (oldNetworkState, newNetworkState) => {
+            const newUdp = Reflect.get(newNetworkState, 'udp');
+            clearInterval(newUdp?.keepAliveInterval);
+        }
+
+        connection.on('stateChange', (oldState, newState) => {
+            const oldNetworking = Reflect.get(oldState, 'networking');
+            const newNetworking = Reflect.get(newState, 'networking');
+
+            oldNetworking?.off('stateChange', networkStateChangeHandler);
+            newNetworking?.on('stateChange', networkStateChangeHandler);
+        });
+
         let url = interaction.options.getString('url');
 
         if (!url.includes('youtube') && !url.includes('spotify') && !url.includes('youtu.be')) {
@@ -138,7 +152,7 @@ module.exports = {
             //Downloads youtube url as mp3, then turns that into an audio resource that works w/ connection
             try {
                 fs.unlinkSync(join(__dirname, '\\..\\song_' + guildId + '.mp3'));
-            } catch(err) {
+            } catch (err) {
                 console.error(err)
             }
             await ytConverter.convertAudio({
@@ -147,23 +161,36 @@ module.exports = {
                 directoryDownload: __dirname + '\\..',
                 title: "song_" + guildId
             }, () => { }, () => {
-                resource = createAudioResource(join(__dirname, '\\..\\song_' + guildId + '.mp3'))
-                
-                connection.subscribe(player);
-                player.play(resource);
+                ytConverter.getInfo(url).then(info => {
+                    let title = info.title;
+                    //Downloaded files can't handle colons
+                    title = title.replaceAll(':', '');
+                    title = title.replaceAll('|', '');
+                    title = title.replaceAll(',', '');
+                    title = title.replaceAll('\\', '');
+                    title = title.replaceAll('/', '');
+                    title = title.replaceAll('?', '');
+                    title = title.replaceAll('"', '');
 
-                if (this.isZoomerModeOn(guildId)) {
-                    setTimeout(() => {
-                        player.play(createAudioResource(join(__dirname, '\\..\\portal_radio.mp3')))
-                        player.stop()
-                    }, 10000)
-                }
+                    fs.renameSync(join(__dirname, '\\..\\', title) + '.mp3', join(__dirname, '\\..\\song_' + guildId + '.mp3'));
+                    resource = createAudioResource(join(__dirname, '\\..\\song_' + guildId + '.mp3'))
+
+                    connection.subscribe(player);
+                    player.play(resource);
+
+                    if (this.isZoomerModeOn(guildId)) {
+                        setTimeout(() => {
+                            player.play(createAudioResource(join(__dirname, '\\..\\portal_radio.mp3')))
+                            player.stop()
+                        }, 10000)
+                    }
+                });
             })
 
         } else if (url.includes('spotify')) {
             console.log('LINK - Creating resource for ' + url)
             resource = createAudioResource(await spotify.downloadTrack(url, 'song_' + guildId + '.mp3'));
-            
+
             connection.subscribe(player);
             player.play(resource);
 
@@ -203,7 +230,7 @@ module.exports = {
 
                         try {
                             fs.unlinkSync(join(__dirname, '\\..\\song_' + guildId + '.mp3'))
-                        } catch(err) {
+                        } catch (err) {
                             console.error(err)
                         }
 
@@ -213,16 +240,29 @@ module.exports = {
                             directoryDownload: __dirname + '\\..',
                             title: "song_" + guildId
                         }, () => { }, () => {
-                            resource = createAudioResource(join(__dirname, '\\..\\song_' + guildId + '.mp3'))
-                            console.log(player);
-                            player.play(resource);
+                            ytConverter.getInfo(queue[0]).then(info => {
+                                let title = info.title;
+                                //Downloaded files can't handle :, |, ,
+                                title = title.replaceAll(':', '');
+                                title = title.replaceAll('|', '');
+                                title = title.replaceAll(',', '');
+                                title = title.replaceAll('\\', '');
+                                title = title.replaceAll('/', '');
+                                title = title.replaceAll('?', '');
+                                title = title.replaceAll('"', '');
 
-                            if (this.isZoomerModeOn(guildId)) {
-                                setTimeout(() => {
-                                    player.play(createAudioResource(join(__dirname, '\\..\\portal_radio.mp3')))
-                                    player.stop()
-                                }, 10000)
-                            }
+                                fs.renameSync(join(__dirname, '\\..\\', title) + '.mp3', join(__dirname, '\\..\\song_' + guildId + '.mp3'));
+                                resource = createAudioResource(join(__dirname, '\\..\\song_' + guildId + '.mp3'))
+                                console.log(player);
+                                player.play(resource);
+
+                                if (this.isZoomerModeOn(guildId)) {
+                                    setTimeout(() => {
+                                        player.play(createAudioResource(join(__dirname, '\\..\\portal_radio.mp3')))
+                                        player.stop()
+                                    }, 10000)
+                                }
+                            })
                         })
                     } else if (queue[0].includes('spotify')) {
                         console.log('QUEUE - Creating resource for ' + queue[0])

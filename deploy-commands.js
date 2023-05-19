@@ -5,8 +5,6 @@ const clientId = process.env.clientId;
 const guildId = process.env.guildId;
 const token = process.env.DISCORD_TOKEN;
 
-console.log(token)
-
 
 const fs = require('node:fs');
 
