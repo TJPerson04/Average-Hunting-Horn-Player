@@ -1,19 +1,19 @@
 const { SlashCommandBuilder, Guild, filter } = require("discord.js");
 const { joinVoiceChannel, createAudioPlayer, NoSubscriberBehavior, createAudioResource, getVoiceConnection } = require('@discordjs/voice');
-require('dotenv').config();
 const { join } = require('node:path');
 const Spotify = require('spotifydl-core').default;
-const index = require('../index');
 const { masterQueue } = require('../index');
 const ytConverter = require('yt-converter');
 const fs = require('fs');
 const PlaylistSummary = require('youtube-playlist-summary')
-
+const { getQueue, playYTVideo, playSpotifySong, playNextSong } = require("../helpers/helper_functions");
 const spotifyCredentials = {
     clientId: process.env.spotifyClientId,
     clientSecret: process.env.spotifyClientSecret
 }
 const spotify = new Spotify(spotifyCredentials);
+
+require('dotenv').config();
 
 let queue = []
 
@@ -31,7 +31,6 @@ module.exports = {
         //Be able to look at songs in queue (currently sometimes doesn't show current song playing)
         //Show what's currently playing, prob delete old "currently playing" message and make a new one
         //Add ability to play spotify albums as well as playlists
-        //Get the bot to leave the vc once done
 
         const textChannel = interaction.channel;
         let voiceChannelId;
@@ -52,6 +51,7 @@ module.exports = {
                 adapterCreator: textChannel.guild.voiceAdapterCreator,
             })
         }
+        let player;
 
         //I have absolutely no clue what this bit of code does, stole it off the internet and it fixed a bug
         const networkStateChangeHandler = (oldNetworkState, newNetworkState) => {
@@ -90,10 +90,10 @@ module.exports = {
 
             await ps.getPlaylistItems(PLAY_LIST_ID)
                 .then(async (result) => {
-                    queue = this.getQueue(textChannel.guild.id)
+                    queue = getQueue(textChannel.guild.id, false)
 
                     if (queue.length == 0) {
-                        this.playYTVideo(interaction.guildId, result.items[0].videoUrl);
+                        playYTVideo(interaction.guildId, result.items[0].videoUrl);
                         //await interaction.reply(`Playing ${url}`);
                     } else {
                         //await interaction.reply('Added to the queue');
@@ -110,11 +110,11 @@ module.exports = {
             await interaction.reply('It prob worked')
 
             await spotify.getPlaylist(url).then(async (result) => {
-                queue = this.getQueue(textChannel.guild.id)
+                queue = getQueue(textChannel.guild.id, false)
                 let tracks = result.tracks;
 
                 if (queue.length == 0) {
-                    this.playYTVideo(interaction.guildId, 'https://open.spotify.com/track/' + tracks[0]);
+                    playSpotifySong(interaction.guildId, 'https://open.spotify.com/track/' + tracks[0]);
                     //await interaction.reply(`Playing ${url}`);
                 } else {
                     //await interaction.reply('Added to the queue');
@@ -132,183 +132,18 @@ module.exports = {
                 url = 'https://www.youtube.com/watch?v=' + url.split('/')[url.split('/').length - 1]
             }
             masterQueue.push([textChannel.guild.id, url, interaction.member]);
-            queue = this.getQueue(textChannel.guild.id)
+            queue = getQueue(textChannel.guild.id, false)
         }
 
         if (queue.length == 1 && !url.includes('playlist')) {
-            this.playYTVideo(interaction.guildId, url);
+            if (url.includes('spotify')) {
+                playSpotifySong(interaction.guildId, url);
+            } else {
+                playYTVideo(interaction.guildId, url);
+            }
             await interaction.reply(`Playing ${url}`);
         } else if (!url.includes('playlist') && (url.includes('youtube') || url.includes('spotify'))) {
             await interaction.reply(`Added ${url} to the queue`);
         }
-
-    },
-    async playYTVideo(guildId, url) {
-        let connection = getVoiceConnection(guildId);
-        let resource;
-        const player = createAudioPlayer();
-
-        if (url.includes('youtube')) {
-            //Downloads youtube url as mp3, then turns that into an audio resource that works w/ connection
-            try {
-                fs.unlinkSync(join(__dirname, '\\..\\song_' + guildId + '.mp3'));
-            } catch (err) {
-                console.error(err)
-            }
-            await ytConverter.convertAudio({
-                url: url,
-                itag: 140,
-                directoryDownload: __dirname + '\\..',
-                title: "song_" + guildId
-            }, () => { }, () => {
-                ytConverter.getInfo(url).then(info => {
-                    let title = info.title;
-                    //Downloaded files can't handle colons
-                    title = title.replaceAll(':', '');
-                    title = title.replaceAll('|', '');
-                    title = title.replaceAll(',', '');
-                    title = title.replaceAll('\\', '');
-                    title = title.replaceAll('/', '');
-                    title = title.replaceAll('?', '');
-                    title = title.replaceAll('"', '');
-
-                    fs.renameSync(join(__dirname, '\\..\\', title) + '.mp3', join(__dirname, '\\..\\song_' + guildId + '.mp3'));
-                    resource = createAudioResource(join(__dirname, '\\..\\song_' + guildId + '.mp3'))
-
-                    connection.subscribe(player);
-                    player.play(resource);
-
-                    if (this.isZoomerModeOn(guildId)) {
-                        setTimeout(() => {
-                            player.play(createAudioResource(join(__dirname, '\\..\\portal_radio.mp3')))
-                            player.stop()
-                        }, 10000)
-                    }
-                });
-            })
-
-        } else if (url.includes('spotify')) {
-            console.log('LINK - Creating resource for ' + url)
-            resource = createAudioResource(await spotify.downloadTrack(url, 'song_' + guildId + '.mp3'));
-
-            connection.subscribe(player);
-            player.play(resource);
-
-            if (this.isZoomerModeOn(guildId)) {
-                setTimeout(() => {
-                    player.play(createAudioResource(join(__dirname, '\\..\\portal_radio.mp3')))
-                    player.stop()
-                }, 10000)
-            }
-        }
-
-        //Waits until song stops, then removes it from the queue and moves to the next song
-        player.addListener("stateChange", async (oldOne, newOne) => {
-            if (newOne.status == "idle") {
-                //Removes song from masterQueue
-                for (let i = 0; i < masterQueue.length; i++) {
-                    if (masterQueue[i][0] == guildId) {
-                        masterQueue.splice(i, 1);
-                        break;
-                    }
-                }
-
-                //Re-defines server specific queue based on masterQueue
-                queue = this.getQueue(guildId)
-                console.log(queue.length)
-
-                //Plays the next song if there are still more in the queue
-                if (queue.length > 0) {
-                    let resource;
-                    if (queue[0].includes('youtube')) {
-                        //This was creating the resource before yt-converter, scared to get rid of it
-                        /*resource = createAudioResource(ytdl(queue[0], {
-                            filter: 'audioonly',
-                            quality: 'highestaudio',
-                            highWaterMark: 1 << 25
-                        }))*/
-
-                        try {
-                            fs.unlinkSync(join(__dirname, '\\..\\song_' + guildId + '.mp3'))
-                        } catch (err) {
-                            console.error(err)
-                        }
-
-                        await ytConverter.convertAudio({
-                            url: queue[0],
-                            itag: 140,
-                            directoryDownload: __dirname + '\\..',
-                            title: "song_" + guildId
-                        }, () => { }, () => {
-                            ytConverter.getInfo(queue[0]).then(info => {
-                                let title = info.title;
-                                //Downloaded files can't handle :, |, ,
-                                title = title.replaceAll(':', '');
-                                title = title.replaceAll('|', '');
-                                title = title.replaceAll(',', '');
-                                title = title.replaceAll('\\', '');
-                                title = title.replaceAll('/', '');
-                                title = title.replaceAll('?', '');
-                                title = title.replaceAll('"', '');
-
-                                fs.renameSync(join(__dirname, '\\..\\', title) + '.mp3', join(__dirname, '\\..\\song_' + guildId + '.mp3'));
-                                resource = createAudioResource(join(__dirname, '\\..\\song_' + guildId + '.mp3'))
-                                console.log(player);
-                                player.play(resource);
-
-                                if (this.isZoomerModeOn(guildId)) {
-                                    setTimeout(() => {
-                                        player.play(createAudioResource(join(__dirname, '\\..\\portal_radio.mp3')))
-                                        player.stop()
-                                    }, 10000)
-                                }
-                            })
-                        })
-                    } else if (queue[0].includes('spotify')) {
-                        console.log('QUEUE - Creating resource for ' + queue[0])
-                        resource = createAudioResource(await spotify.downloadTrack(queue[0], 'song_' + guildId + '.mp3'))
-                        player.play(resource)
-
-                        if (this.isZoomerModeOn(guildId)) {
-                            setTimeout(() => {
-                                player.play(createAudioResource(join(__dirname, '\\..\\portal_radio.mp3')))
-                                player.stop()
-                            }, 10000)
-                        }
-                    }
-                    console.log('Moving to next song');
-                } else {
-                    console.log('Reched the end of the queue');
-                    connection.disconnect();
-                    connection.destroy();
-                }
-            }
-        });
-
-        player.on('error', err => {
-            console.error(err);
-            player.play(createAudioResource(__dirname + '\\..\\portal_radio.mp3'));
-            player.stop();
-        })
-    },
-    //Creates server specific queue
-    getQueue(guildId) {
-        let queue = []
-        for (let i = 0; i < masterQueue.length; i++) {
-            if (masterQueue[i][0] == guildId) {
-                queue.push(masterQueue[i][1]);
-            }
-        }
-        return queue
-    },
-    //Checks if zoomer mode is on for a specific guild
-    isZoomerModeOn(guildId) {
-        for (let i = 0; i < index.zoomerMode.length; i++) {
-            if (index.zoomerMode[i][1] == guildId) {
-                return index.zoomerMode[i][0]
-            }
-        }
-
-        return false
     }
 }

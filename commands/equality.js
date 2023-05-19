@@ -1,13 +1,15 @@
 const { SlashCommandBuilder, Guild } = require("discord.js");
 const { masterQueue } = require("..");
+const { getQueue } = require("../helpers/helper_functions");
 require('dotenv').config();
+
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('equality')
         .setDescription('Rearranges the queue to alternate between music played by different people'),
     async execute(interaction) {
-        let queue = this.getQueue(interaction.guildId);
+        let queue = getQueue(interaction.guildId, true);
 
         //Removes queue from masterQueue
         for (let i = 0; i < masterQueue.length; i++) {
@@ -51,15 +53,5 @@ module.exports = {
 
         console.log('Spread queue between ' + people.length + ' people');
         await interaction.reply('Equality has been reached');
-    },
-    //Changed slightly, now returns queue w/ members
-    getQueue(guildId) {
-        let queue = []
-        for (let i = 0; i < masterQueue.length; i++) {
-            if (masterQueue[i][0] == guildId) {
-                queue.push([masterQueue[i][1], masterQueue[i][2]]);
-            }
-        }
-        return queue
     }
 }

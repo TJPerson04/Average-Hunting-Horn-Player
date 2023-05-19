@@ -1,14 +1,16 @@
 const { SlashCommandBuilder, Guild } = require("discord.js");
 const fs = require('fs');
 const { masterQueue } = require("..");
+const { getQueue } = require("../helpers/helper_functions");
 require('dotenv').config();
+
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('shuffle')
         .setDescription('Shuffles the current queue'),
     async execute(interaction) {
-        let queue = this.getQueue(interaction.guildId);
+        let queue = getQueue(interaction.guildId, true);
 
         //Removes queue from masterQueue
         for (let i = 0; i < masterQueue.length; i++) {
@@ -29,16 +31,6 @@ module.exports = {
         }
 
         await interaction.reply('Queue shuffled')
-    },
-    //Changed slightly, now returns queue w/ members
-    getQueue(guildId) {
-        let queue = []
-        for (let i = 0; i < masterQueue.length; i++) {
-            if (masterQueue[i][0] == guildId) {
-                queue.push([masterQueue[i][1], masterQueue[i][2]]);
-            }
-        }
-        return queue
     },
     shuffle(array) {
         for (var i = array.length - 1; i > 0; i--) {

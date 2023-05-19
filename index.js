@@ -7,7 +7,6 @@ const path = require('node:path');
 
 module.exports = {
     masterQueue: [],
-    zoomerMode: [false, '735662776449761400'],
     isInspirationPlaying: [false, '735662776449761400']
 }
 
