@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, Guild, EmbedBuilder } = require("discord.js");
-const { masterQueue } = require('../index');
+const { masterQueue, queueIndexes } = require('../index');
 const getYoutubeTitle = require('get-youtube-title');
+const { getQueueIndex } = require('../helpers/helper_functions');
 require('dotenv').config();
 const API_KEY = process.env.GOOGLE_API_KEY
 const Spotify = require('spotifydl-core').default;
@@ -20,6 +21,8 @@ module.exports = {
         let queue = this.getQueue(interaction.guildId);
         console.log(queue)
 
+        let queueIndex = getQueueIndex(interaction.guildId);
+
         let videoIds = []
         for (let i = 0; i < queue.length; i++) {
             let videoId;
@@ -36,7 +39,7 @@ module.exports = {
         }
 
         //Sets up framework for moving farther into queue with arrow reactions
-        let start = 0;
+        let start = queueIndex;
         let limit;
         if (videoIds.length - start > 5) {
             limit = 5
@@ -62,9 +65,11 @@ module.exports = {
         //Probably not amazing but fixed problem where ending code ran before callback functions
         //Could prob make for loop where reply inside callback  (Tried this, didn't work, callbacks were still called in a random order)
         if (numTitles < ogNumTitle + limit) {
+            let queueIndex = getQueueIndex(interaction.guildId);
+
             if (videoIds[numTitles].includes('spotify')) {
                 await spotify.getTrack(videoIds[numTitles]).then(async (title) => {
-                    startText += (numTitles + 1) + ': ' + title.name + '\n';
+                    startText += (numTitles + 1 - queueIndex) + ': ' + title.name + '\n';
 
                     let test = await this.getTitles(interaction, videoIds, numTitles + 1, startText, ogNumTitle, limit)
                     if (test) {
@@ -81,7 +86,7 @@ module.exports = {
                     if (err) {
                         console.error(err)
                     } else {
-                        startText += (numTitles + 1) + ': ' + title + '\n';
+                        startText += (numTitles + 1 - queueIndex) + ': ' + title + '\n';
                     }
                     let test = await this.getTitles(interaction, videoIds, numTitles + 1, startText, ogNumTitle, limit)
                     if (test) {

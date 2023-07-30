@@ -1,15 +1,35 @@
-const { SlashCommandBuilder, Guild } = require("discord.js");
 const { masterQueue } = require("..");
-const { getQueue } = require("../helpers/helper_functions");
+const { getQueue, getQueueIndex } = require("../helpers/helper_functions");
 require('dotenv').config();
 
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('equality')
-        .setDescription('Rearranges the queue to alternate between music played by different people'),
     async execute(interaction) {
         let queue = getQueue(interaction.guildId, true);
+        let queueIndex = getQueueIndex(interaction.guildId);
+
+        //Removes queue from masterQueue
+        for (let i = 0; i < masterQueue.length; i++) {
+            if (masterQueue[i][0] == interaction.guildId) {
+                masterQueue.splice(i, 1);
+                i = -1; //So that it will increment to 0 for the next run
+            }
+        }
+
+        //Makes sure that the currently playing song is still at the front of the queue, then doesn't repeat
+        for (let i = 0; i <= queueIndex; i++) {
+            masterQueue.push([interaction.guildId, queue[i][0], queue[i][1]])
+        }
+        queue.splice(0, queueIndex)
+
+        this.shuffle(queue);
+
+        for (let i = 0; i < queue.length; i++) {
+            masterQueue.push([interaction.guildId, queue[i][0], queue[i][1]])
+        }
+
+        //Equality Part
+        queue = getQueue(interaction.guildId, true);
 
         //Removes queue from masterQueue
         for (let i = 0; i < masterQueue.length; i++) {
@@ -52,6 +72,13 @@ module.exports = {
         }
 
         console.log('Spread queue between ' + people.length + ' people');
-        //await interaction.reply('Equality has been reached');  //Commented bc play-favs
+    },
+    shuffle(array) {
+        for (var i = array.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
+        }
     }
 }

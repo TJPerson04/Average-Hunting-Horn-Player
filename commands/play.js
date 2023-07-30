@@ -1,12 +1,8 @@
-const { SlashCommandBuilder, Guild, filter } = require("discord.js");
-const { joinVoiceChannel, createAudioPlayer, NoSubscriberBehavior, createAudioResource, getVoiceConnection } = require('@discordjs/voice');
-const { join } = require('node:path');
+const { SlashCommandBuilder, Guild, filter, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require("discord.js");
+const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
 const Spotify = require('spotifydl-core').default;
-const { masterQueue } = require('../index');
-const ytConverter = require('yt-converter');
-const fs = require('fs');
-const PlaylistSummary = require('youtube-playlist-summary')
-const { getQueue, playYTVideo, playSpotifySong, playNextSong } = require("../helpers/helper_functions");
+const { masterQueue, isQueueSetUp, queueIndexes, currentInteraction, currentMessage } = require('../index');
+const { getQueue, playYTVideo, playSpotifySong, addYTPlaylist, addSpotifyPlaylist, isQueueHere } = require("../helpers/helper_functions");
 const spotifyCredentials = {
     clientId: process.env.spotifyClientId,
     clientSecret: process.env.spotifyClientSecret
@@ -31,6 +27,16 @@ module.exports = {
         //Be able to look at songs in queue (currently sometimes doesn't show current song playing)
         //Show what's currently playing, prob delete old "currently playing" message and make a new one
         //Add ability to play spotify albums as well as playlists
+        //Make currentMessage and currentInteraction able to be used in multiple servers
+
+        currentInteraction.push(interaction);
+
+        let message = await interaction.deferReply({ fetchReply: true });
+        currentMessage.push(message);
+
+        if (!isQueueHere(interaction.guildId)) {
+            queueIndexes.push([0, interaction.guildId]);
+        }
 
         const textChannel = interaction.channel;
         let voiceChannelId;
@@ -38,7 +44,7 @@ module.exports = {
             voiceChannelId = interaction.member.voice.channel.id;
         } else {
             await interaction.reply('You must be in a voice channel to use this command');
-            return
+            return;
         }
 
         let connection;
@@ -51,7 +57,6 @@ module.exports = {
                 adapterCreator: textChannel.guild.voiceAdapterCreator,
             })
         }
-        let player;
 
         //I have absolutely no clue what this bit of code does, stole it off the internet and it fixed a bug
         const networkStateChangeHandler = (oldNetworkState, newNetworkState) => {
@@ -77,56 +82,12 @@ module.exports = {
         queue = []
 
         if (url.includes('playlist') && url.includes('youtube')) {
-            const config = {
-                GOOGLE_API_KEY: process.env.GOOGLE_API_KEY, // require
-                PLAYLIST_ITEM_KEY: ['videoUrl'], // option
-            }
-
-            const ps = new PlaylistSummary(config)
-            const PLAY_LIST_ID = url.split('list=')[1] //Gets the id from the url
-
             //This is so it doesn't time out waiting for a response, breaking it
-            await interaction.reply(`Currently playing ${url} (probably)`)
-
-            await ps.getPlaylistItems(PLAY_LIST_ID)
-                .then(async (result) => {
-                    queue = getQueue(textChannel.guild.id, false)
-
-                    if (queue.length == 0) {
-                        playYTVideo(interaction.guildId, result.items[0].videoUrl);
-                        //await interaction.reply(`Playing ${url}`);
-                    } else {
-                        //await interaction.reply('Added to the queue');
-                    }
-
-                    for (let i = 0; i < result.items.length; i++) {
-                        masterQueue.push([textChannel.guild.id, result.items[i].videoUrl, interaction.member]);
-                    }
-                })
-                .catch((error) => {
-                    console.error(error)
-                })
+            //await interaction.reply(`Currently playing ${url} (probably)`)
+            addYTPlaylist(interaction.guild.id, interaction.user.id, url)
         } else if (url.includes('playlist') && url.includes('spotify')) {
-            await interaction.reply('It prob worked')
-
-            await spotify.getPlaylist(url).then(async (result) => {
-                queue = getQueue(textChannel.guild.id, false)
-                let tracks = result.tracks;
-
-                if (queue.length == 0) {
-                    playSpotifySong(interaction.guildId, 'https://open.spotify.com/track/' + tracks[0]);
-                    //await interaction.reply(`Playing ${url}`);
-                } else {
-                    //await interaction.reply('Added to the queue');
-                }
-
-                for (let i = 0; i < tracks.length; i++) {
-                    masterQueue.push([textChannel.guild.id, 'https://open.spotify.com/track/' + tracks[i], interaction.member])
-                }
-            })
-                .catch((error) => {
-                    console.error(error)
-                })
+            //await interaction.reply('It prob worked')
+            addSpotifyPlaylist(interaction.guild.id, interaction.user.id, url)
         } else {
             if (url.includes('youtu.be')) { //Reformats mobile links
                 url = 'https://www.youtube.com/watch?v=' + url.split('/')[url.split('/').length - 1]
@@ -137,13 +98,16 @@ module.exports = {
 
         if (queue.length == 1 && !url.includes('playlist')) {
             if (url.includes('spotify')) {
+                currentInteraction.push(interaction);
                 playSpotifySong(interaction.guildId, url);
             } else {
+                currentInteraction.push(interaction);
                 playYTVideo(interaction.guildId, url);
             }
-            await interaction.reply(`Playing ${url}`);
+            let message = await interaction.deferReply({ fetchReply: true });
+            currentMessage.push(message);
         } else if (!url.includes('playlist') && (url.includes('youtube') || url.includes('spotify'))) {
-            await interaction.reply(`Added ${url} to the queue`);
+            //await interaction.reply(`Added ${url} to the queue`);
         }
     }
 }

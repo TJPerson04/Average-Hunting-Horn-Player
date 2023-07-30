@@ -30,7 +30,7 @@ module.exports = {
             masterQueue.push([interaction.guildId, queue[i][0], queue[i][1]])
         }
 
-        await interaction.reply('Queue shuffled')
+        //await interaction.reply('Queue shuffled')  //Commented bc play-favs
     },
     shuffle(array) {
         for (var i = array.length - 1; i > 0; i--) {

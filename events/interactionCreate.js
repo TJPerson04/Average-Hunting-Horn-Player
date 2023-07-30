@@ -1,0 +1,48 @@
+const { Events, ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType } = require('discord.js');
+const skip = require('../button-commands/skip');
+const stop = require('../button-commands/stop');
+const pause = require('../button-commands/pause');
+const prev = require('../button-commands/previous');
+const shuffle = require('../button-commands/shuffle');
+
+
+module.exports = {
+    name: Events.InteractionCreate,
+    async execute(interaction) {
+        if (interaction.isChatInputCommand()) {
+
+            const command = interaction.client.commands.get(interaction.commandName);
+
+            if (!command) {
+                console.error(`No command matching ${interaction.commandName} was found.`);
+                return;
+            }
+
+            try {
+                await command.execute(interaction);
+            } catch (error) {
+                console.error(`Error executing ${interaction.commandName}`);
+                console.error(error);
+            }
+        } else if (interaction.isButton()) {
+            interaction.update(interaction.fetchReply()); //This is just so that the interaction doesn't time out
+            if (interaction.customId == 'skip') {
+                skip.execute(interaction);
+            } else if (interaction.customId == 'stop') {
+                stop.execute(interaction);
+            } else if (interaction.customId == 'pause') {
+                const result = await pause.execute(interaction);
+
+                //TODO: Make it so that when paused/played the button emoji changes from a pause to a play symbol
+                //Also, the custom emojis will not work in other servers, fix that
+                if (result == 'paused') {
+                    console.log(interaction);
+                }
+            } else if (interaction.customId == 'prev') {
+                prev.execute(interaction);
+            } else if (interaction.customId == 'shuffle') {
+                shuffle.execute(interaction);
+            }
+        }
+    }
+}
