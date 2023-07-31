@@ -12,7 +12,7 @@ require('dotenv').config();
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('play-favs')
-        .setDescription('Plays the playlists of everyone in a vc - UNDER CONSTRUCTION'),
+        .setDescription('Plays the playlists of everyone in a vc'),
     async execute(interaction) {
         if (!isQueueHere(interaction.guildId)) {
             queueIndexes.push([0, interaction.guildId]);

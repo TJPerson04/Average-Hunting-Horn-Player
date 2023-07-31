@@ -5,15 +5,6 @@ const token = process.env.DISCORD_TOKEN
 const fs = require('node:fs');
 const path = require('node:path');
 
-module.exports = {
-    masterQueue: [],
-    isInspirationPlaying: [false, '735662776449761400'],
-    queueIndexes: [],
-    isLooping: [],
-    currentInteraction: [],
-    currentMessage: []
-}
-
 //Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMessages] });
 //const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] });
@@ -22,6 +13,16 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBit
 myIntents.add(Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES);
 
 const client = new Client({ intents: myIntents }); */
+
+module.exports = {
+    masterQueue: [],
+    isInspirationPlaying: [false, '735662776449761400'],
+    queueIndexes: [],
+    isLooping: [],
+    currentInteraction: [],
+    currentMessage: [],
+    client: client
+}
 
 
 client.commands = new Collection();
@@ -55,3 +56,9 @@ for (const file of eventFiles) {
 
 //Log in to Discord with your client's token
 client.login(token)
+
+// client.guilds.fetch('735662776449761400').then((guild) => {
+//     guild.members.fetch('481184224855195649').then((member) => {
+//         member.nickname ? console.log(member.nickname) : console.log(member.user.username)
+//     })
+// })

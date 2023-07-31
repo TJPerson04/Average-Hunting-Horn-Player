@@ -1,6 +1,6 @@
-const { masterQueue, queueIndexes, isLooping, currentInteraction, currentMessage } = require('../index');
+const { masterQueue, queueIndexes, isLooping, currentInteraction, currentMessage, client } = require('../index');
 const { joinVoiceChannel, createAudioPlayer, NoSubscriberBehavior, createAudioResource, getVoiceConnection } = require('@discordjs/voice');
-const { ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType, ClientUser } = require('discord.js');
+const { ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType, ClientUser, Client } = require('discord.js');
 const ytConverter = require('yt-converter');
 const fs = require('fs');
 const { join } = require('node:path');
@@ -45,24 +45,23 @@ module.exports = {
         const row = new ActionRowBuilder()
             .addComponents(prevButton, shuffleButton, stopButton, pauseButton, skipButton);
 
+        //Gets user's name to display who added the current song
+        let queue = this.getQueue(guildId, true);
+        let queueIndex = this.getQueueIndex(guildId);
+        let memberId = queue[queueIndex][1];
+        let guild = await client.guilds.fetch(guildId);
+        let member = await guild.members.fetch(memberId);
+        
         //This is a little weird but edits the interaction if it can (so that it isn't constantly defered), and edits the message if it can't (after 15 minutes)
-        //let queue = this.getQueue(guildId, true);
-        //let queueIndex = this.getQueueIndex(guildId);
-        
-        //let memberId = queue[queueIndex][1];
-        //let nickname = member ? member.displayName : null;
-        
-        let nicknameTest = 'UNDER CONSTRUCTION'
-
         let response;
         try {
             response = await currentInteraction[0].editReply({
-                content: "Currently playing " + url + "\nAdded by " + nicknameTest,
+                content: "Currently playing " + url + "\nAdded by " + member.toString(),
                 components: [row]
             })
         } catch (err) {
             response = await currentMessage[0].edit({
-                content: "Currently playing " + url + "\nAdded by " + nicknameTest,
+                content: "Currently playing " + url + "\nAdded by " + member.toString(),
                 components: [row]
             });
         }
