@@ -11,13 +11,16 @@ module.exports = {
         let currentInteractionIndex = getCurrentInteractionIndex(interaction.guildId);
         let currentMessageIndex = getCurrentMessageIndex(interaction.guildId);
 
-        if (!currentInteractionIndex || !currentMessageIndex) {
+        console.log(currentInteractionIndex);
+        console.log(currentMessageIndex);
+
+        if (currentInteractionIndex == null || currentMessageIndex == null) {
             interaction.reply('No message to update');
             return
         }
 
-        let content = currentMessage[currentInteractionIndex].reactions.message.content;
-        let row = currentMessage[currentInteractionIndex].reactions.message.components;
+        let content = currentMessage[currentInteractionIndex][1].reactions.message.content;
+        let row = currentMessage[currentInteractionIndex][1].reactions.message.components;
 
         let newMessage = await interaction.deferReply({ fetchReply: true });
         await interaction.editReply({
