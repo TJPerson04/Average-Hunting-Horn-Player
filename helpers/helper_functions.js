@@ -51,16 +51,24 @@ module.exports = {
         let memberId = queue[queueIndex][1];
         let guild = await client.guilds.fetch(guildId);
         let member = await guild.members.fetch(memberId);
+
+        let currentInteractionIndex = module.exports.getCurrentInteractionIndex(guildId);
+        let currentMessageIndex = module.exports.getCurrentMessageIndex(guildId);
+
+        if (currentMessageIndex == null) {
+            console.log(currentMessage);
+            return
+        }
         
         //This is a little weird but edits the interaction if it can (so that it isn't constantly defered), and edits the message if it can't (after 15 minutes)
         let response;
         try {
-            response = await currentInteraction[0].editReply({
+            response = await currentInteraction[currentInteractionIndex][1].editReply({
                 content: "Currently playing " + url + "\nAdded by " + member.toString(),
                 components: [row]
             })
         } catch (err) {
-            response = await currentMessage[0].edit({
+            response = await currentMessage[currentMessageIndex][1].edit({
                 content: "Currently playing " + url + "\nAdded by " + member.toString(),
                 components: [row]
             });
@@ -112,9 +120,9 @@ module.exports = {
                 title = title.replaceAll(':', '').replaceAll('|', '').replaceAll(',', '').replaceAll('\\', '').replaceAll('/', '').replaceAll('?', '').replaceAll('"', '');
 
                 //Makes sure that if the skip/previous button is spammed, only the correct song actually plays
-                //Doesn't really work that well tbh
-                let queue = this.getQueue(guildId, false);
-                let currentUrl = queue[this.getQueueIndex(guildId)];
+                //Doesn't really work that well tbh (It said "this.getQueue is not a function")
+                let queue = module.exports.getQueue(guildId, false);
+                let currentUrl = queue[module.exports.getQueueIndex(guildId)];
 
                 try {
                     if (url == currentUrl) {
@@ -215,6 +223,12 @@ module.exports = {
                 }
             } else {
                 console.log('Reched the end of the queue');
+                for (let i = 0; i < masterQueue.length; i++) {
+                    if (masterQueue[i][0] == interaction.guildId) {
+                        masterQueue.splice(i, 1);
+                        i = 0;
+                    }
+                }
                 connection.disconnect();
                 connection.destroy();
             }
@@ -271,6 +285,7 @@ module.exports = {
             })
     },
 
+    //
     isQueueHere(guildId) {
         for (let i = 0; i < queueIndexes.length; i++) {
             if (queueIndexes[i][1] == guildId) {
@@ -288,5 +303,25 @@ module.exports = {
         }
 
         return 0;
+    },
+
+    getCurrentInteractionIndex(guildId) {
+        for (let i = 0; i < currentInteraction.length; i++) {
+            if (currentInteraction[i][0] == guildId) {
+                return i;
+            }
+        }
+
+        return null;
+    },
+
+    getCurrentMessageIndex(guildId) {
+        for (let i = 0; i < currentMessage.length; i++) {
+            if (currentMessage[i][0] == guildId) {
+                return i;
+            }
+        }
+
+        return null;
     }
 }

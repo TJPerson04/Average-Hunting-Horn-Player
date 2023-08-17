@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, Guild } = require("discord.js");
 const fs = require('fs');
 const { join } = require('node:path');
-const { addYTPlaylist, addSpotifyPlaylist, isQueueHere } = require("../helpers/helper_functions");
+const { addYTPlaylist, addSpotifyPlaylist, isQueueHere, getCurrentInteractionIndex, getCurrentMessageIndex } = require("../helpers/helper_functions");
 const shuffle = require('./shuffle');
 const equality = require('./equality');
 const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
@@ -21,7 +21,14 @@ module.exports = {
         db = JSON.parse(fs.readFileSync(join(__dirname, '\\..\\favs.json')));
         
         let message = await interaction.deferReply({ fetchReply: true });
-        currentMessage.push(message);
+
+        //Checks if server has current interaction/message
+        //If so, updates not, otherwise adds one
+        let currentInteractionIndex = getCurrentInteractionIndex(interaction.guildId);
+        let currentMessageIndex = getCurrentMessageIndex(interaction.guildId);
+
+        currentInteractionIndex ? currentInteraction[currentInteractionIndex][1] = interaction : currentInteraction.push([interaction.guildId, interaction]);
+        currentMessageIndex ? currentMessage[currentMessageIndex][1] = message : currentMessage.push([interaction.guildId, message]);
 
 
         let users = []
@@ -54,7 +61,6 @@ module.exports = {
             newNetworking?.on('stateChange', networkStateChangeHandler);
         });
 
-        currentInteraction.push(interaction);
         for (let i = 0; i < db.lists.length; i++) {
             if (users.includes(db.lists[i][0])) {
                 if (db.lists[i][1].includes('youtube')) {
