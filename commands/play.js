@@ -2,7 +2,7 @@ const { SlashCommandBuilder, Guild, filter, ButtonBuilder, ButtonStyle, ActionRo
 const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
 const Spotify = require('spotifydl-core').default;
 const { masterQueue, isQueueSetUp, queueIndexes, currentInteraction, currentMessage } = require('../index');
-const { getQueue, playYTVideo, playSpotifySong, addYTPlaylist, addSpotifyPlaylist, isQueueHere } = require("../helpers/helper_functions");
+const { getQueue, playYTVideo, playSpotifySong, addYTPlaylist, addSpotifyPlaylist, isQueueHere, getCurrentInteractionIndex, getCurrentMessageIndex } = require("../helpers/helper_functions");
 const spotifyCredentials = {
     clientId: process.env.spotifyClientId,
     clientSecret: process.env.spotifyClientSecret
@@ -25,14 +25,18 @@ module.exports = {
     async execute(interaction) {
         //TODO:
         //Be able to look at songs in queue (currently sometimes doesn't show current song playing)
-        //Show what's currently playing, prob delete old "currently playing" message and make a new one
         //Add ability to play spotify albums as well as playlists
         //Make currentMessage and currentInteraction able to be used in multiple servers
 
-        currentInteraction.push(interaction);
-
         let message = await interaction.deferReply({ fetchReply: true });
-        currentMessage.push(message);
+
+        //Checks if server has current interaction/message
+        //If so, updates not, otherwise adds one
+        let currentInteractionIndex = getCurrentInteractionIndex(interaction.guildId);
+        let currentMessageIndex = getCurrentMessageIndex(interaction.guildId);
+
+        currentInteractionIndex ? currentInteraction[currentInteractionIndex][1] = interaction : currentInteraction.push([interaction.guildId, interaction]);
+        currentMessageIndex ? currentMessage[currentMessageIndex][1] = message : currentMessage.push([interaction.guildId, message]);
 
         if (!isQueueHere(interaction.guildId)) {
             queueIndexes.push([0, interaction.guildId]);
@@ -104,8 +108,8 @@ module.exports = {
                 currentInteraction.push(interaction);
                 playYTVideo(interaction.guildId, url);
             }
-            let message = await interaction.deferReply({ fetchReply: true });
-            currentMessage.push(message);
+            //let message = await interaction.deferReply({ fetchReply: true });
+            //currentMessage.push(message);
         } else if (!url.includes('playlist') && (url.includes('youtube') || url.includes('spotify'))) {
             //await interaction.reply(`Added ${url} to the queue`);
         }
