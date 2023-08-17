@@ -23,6 +23,13 @@ module.exports = {
             }
         }
 
+        //Removes current message & current index
+        let currentMessageIndex = getCurrentMessageIndex(interaction.guildId);
+        let currentInteractionIndex = getCurrentInteractionIndex(interaction.guildId);
+
+        currentMessage.splice(currentMessageIndex, 1);
+        currentInteraction.splice(currentInteractionIndex, 1);
+
         //Stops inspirobot voice
         for (let i = 0; i < index.isInspirationPlaying.length; i++) {
             if (index.isInspirationPlaying[i][1] == interaction.guildId) {
