@@ -32,4 +32,3 @@ module.exports = {
         currentMessage[currentMessageIndex][1] = newMessage
     }
 }
-//TEST
