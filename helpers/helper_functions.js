@@ -224,7 +224,7 @@ module.exports = {
             } else {
                 console.log('Reched the end of the queue');
                 for (let i = 0; i < masterQueue.length; i++) {
-                    if (masterQueue[i][0] == interaction.guildId) {
+                    if (masterQueue[i][0] == guildId) {
                         masterQueue.splice(i, 1);
                         i = 0;
                     }
