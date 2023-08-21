@@ -48,6 +48,7 @@ module.exports = {
         //Gets user's name to display who added the current song
         let queue = this.getQueue(guildId, true);
         let queueIndex = this.getQueueIndex(guildId);
+        console.log(queueIndex);
         let memberId = queue[queueIndex][1];
         let guild = await client.guilds.fetch(guildId);
         let member = await guild.members.fetch(memberId);
@@ -323,5 +324,16 @@ module.exports = {
         }
 
         return null;
+    },
+
+    changeQueueIndex(guildId, newIndex) {
+        for (let i = 0; i < queueIndexes.length; i++) {
+            if (queueIndexes[i][1] == guildId) {
+                queueIndexes[i][0] = newIndex;
+                return queueIndexes[i][0];
+            }
+        }
+
+        return 0;
     }
 }
