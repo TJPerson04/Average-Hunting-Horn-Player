@@ -5,13 +5,19 @@ const fs = require('fs');
 require('dotenv').config();
 const index = require('../index');
 const { join } = require('node:path');
+const { setTimeout } = require("timers/promises");
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('stop')
         .setDescription('Exits Voice Channel'),
     async execute(interaction) {
-        const { getVoiceConnection } = require('@discordjs/voice');
+        await interaction.reply('Test');
+        for (let i = 0; i < 30; i++) {
+            await interaction.editReply('Test ' + i);
+            await setTimeout(500);
+        }
+        /*const { getVoiceConnection } = require('@discordjs/voice');
 
         const connection = getVoiceConnection(interaction.guildId);
 
@@ -57,7 +63,7 @@ module.exports = {
                 masterQueue.splice(i, 1);
                 i = 0;
             }
-        }
+        }*/
 
         /*//Deletes any files in files folder
         let files = fs.readdirSync(__dirname + '\\..\\files', (err) => {
