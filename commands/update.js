@@ -21,6 +21,7 @@ module.exports = {
 
         let content = currentMessage[currentInteractionIndex][1].reactions.message.content;
         let row = currentMessage[currentInteractionIndex][1].reactions.message.components;
+        currentMessage[currentInteractionIndex][1].delete();
 
         let newMessage = await interaction.deferReply({ fetchReply: true });
         await interaction.editReply({

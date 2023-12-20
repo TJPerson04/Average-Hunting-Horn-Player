@@ -2,7 +2,7 @@ const { SlashCommandBuilder, Guild, filter, ButtonBuilder, ButtonStyle, ActionRo
 const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
 const Spotify = require('spotifydl-core').default;
 const { masterQueue, isQueueSetUp, queueIndexes, currentInteraction, currentMessage } = require('../index');
-const { getQueue, playYTVideo, playSpotifySong, addYTPlaylist, addSpotifyPlaylist, isQueueHere, getCurrentInteractionIndex, getCurrentMessageIndex } = require("../helpers/helper_functions");
+const { getQueue, playYTVideo, playSpotifySong, addYTPlaylist, addSpotifyPlaylist, isQueueHere, getCurrentInteractionIndex, getCurrentMessageIndex, changeQueueIndex } = require("../helpers/helper_functions");
 const spotifyCredentials = {
     clientId: process.env.spotifyClientId,
     clientSecret: process.env.spotifyClientSecret
@@ -40,6 +40,10 @@ module.exports = {
 
         if (!isQueueHere(interaction.guildId)) {
             queueIndexes.push([0, interaction.guildId]);
+        } else {
+            if (getQueue(interaction.guildId).length == 0) {
+                changeQueueIndex(interaction.guildId, 0);
+            }
         }
 
         const textChannel = interaction.channel;

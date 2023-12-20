@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, Guild } = require("discord.js");
 const fs = require('fs');
 const { join } = require('node:path');
-const { addYTPlaylist, addSpotifyPlaylist, isQueueHere, getCurrentInteractionIndex, getCurrentMessageIndex } = require("../helpers/helper_functions");
+const { addYTPlaylist, addSpotifyPlaylist, isQueueHere, getCurrentInteractionIndex, getCurrentMessageIndex, changeQueueIndex } = require("../helpers/helper_functions");
 const shuffle = require('./shuffle');
 const equality = require('./equality');
 const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
@@ -16,6 +16,10 @@ module.exports = {
     async execute(interaction) {
         if (!isQueueHere(interaction.guildId)) {
             queueIndexes.push([0, interaction.guildId]);
+        } else {
+            if (getQueue(interaction.guildId).length == 0) {
+                changeQueueIndex(interaction.guildId, 0);
+            }
         }
 
         db = JSON.parse(fs.readFileSync(join(__dirname, '\\..\\favs.json')));

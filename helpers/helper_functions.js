@@ -48,6 +48,7 @@ module.exports = {
         //Gets user's name to display who added the current song
         let queue = this.getQueue(guildId, true);
         let queueIndex = this.getQueueIndex(guildId);
+        console.log(queueIndex);
         let memberId = queue[queueIndex][1];
         let guild = await client.guilds.fetch(guildId);
         let member = await guild.members.fetch(memberId);
@@ -59,8 +60,10 @@ module.exports = {
             console.log(currentMessage);
             return
         }
-        
-        //This is a little weird but edits the interaction if it can (so that it isn't constantly defered), and edits the message if it can't (after 15 minutes)
+
+        //This is a little weird but edits the interaction if it 
+        //can (so that it isn't constantly defered), 
+        //and edits the message if it can't (after 15 minutes)
         let response;
         try {
             response = await currentInteraction[currentInteractionIndex][1].editReply({
@@ -74,7 +77,10 @@ module.exports = {
             });
         }
 
-        const collector = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 3_600_000 });
+        const collector = response.createMessageComponentCollector({ 
+            componentType: ComponentType.StringSelect, 
+            time: 3_600_000 
+        });
 
         collector.on('collect', async i => {
             const selection = i.values[0];
@@ -100,59 +106,89 @@ module.exports = {
     async playYTVideo(guildId, url) {
         let connection = getVoiceConnection(guildId)
         const player = createAudioPlayer();
+        let test = player;
 
         //Removes old song if there
         try {
-            fs.unlinkSync(join(__dirname, '\\..\\files\\songs\\song_' + guildId + '.mp3'));
+            //fs.unlinkSync(join(__dirname, '\\..\\files\\songs\\song_' + guildId + '.mp3'));
         } catch (err) {
+            console.log('AN ERROR OCCURED')
             console.error(err)
         }
+        console.log('1 - ' + url)
 
         //Downloads youtube url as mp3, then turns that into an audio resource that works w/ connection
-        await ytConverter.convertAudio({
-            url: url,
-            directoryDownload: __dirname + '\\..\\files\\songs',
-            title: "song_" + guildId
-        }, () => { }, async () => {
-            await ytConverter.getInfo(url).then(async info => {
-                let title = info.title;
-                //Downloaded files can't handle colons, so this removes them
-                title = title.replaceAll(':', '').replaceAll('|', '').replaceAll(',', '').replaceAll('\\', '').replaceAll('/', '').replaceAll('?', '').replaceAll('"', '');
+        try {
+            ytConverter.convertAudio({
+                url: url,
+                directoryDownload: __dirname + '\\..\\files\\songs',
+                itag: 140
+            }, (perc) => { 
+                console.log(perc)
+            }, async () => {
+                console.log('1.5 - ' + url)
+                await ytConverter.getInfo(url).then(async info => {
+                    console.log('2 - ' + url)
+                    let title = info.title;
+                    //Downloaded files can't handle colons, so this removes them
+                    title = title.replaceAll(':', '').replaceAll('|', '').replaceAll(',', '').replaceAll('\\', '').replaceAll('/', '').replaceAll('?', '').replaceAll('"', '').replaceAll('*', '');
 
-                //Makes sure that if the skip/previous button is spammed, only the correct song actually plays
-                //Doesn't really work that well tbh (It said "this.getQueue is not a function")
-                let queue = module.exports.getQueue(guildId, false);
-                let currentUrl = queue[module.exports.getQueueIndex(guildId)];
+                    //Makes sure that if the skip/previous button is spammed, only the correct song actually plays
+                    //Doesn't really work that well tbh (It said "this.getQueue is not a function")
+                    let queue = module.exports.getQueue(guildId, false);
+                    let currentUrl = queue[module.exports.getQueueIndex(guildId)];
 
-                try {
-                    if (url == currentUrl) {
-                        fs.renameSync(join(__dirname, '\\..\\files\\songs\\', title) + '.mp3', join(__dirname, '\\..\\files\\songs\\song_' + guildId + '.mp3'));
-                    } else {
-                        fs.unlinkSync(join(__dirname, '\\..\\files\\songs\\', title) + '.mp3');
+                    console.log('3 - ' + url)
+                    try {
+                        if (url == currentUrl) {
+                            console.log('test1')
+                            fs.renameSync(join(__dirname, '\\..\\files\\songs\\', title) + '.mp3', join(__dirname, '\\..\\files\\songs\\song_' + guildId + '.mp3'));
+                            console.log('test2')
+                        } else {
+                            console.log('test3')
+                            fs.unlinkSync(join(__dirname, '\\..\\files\\songs\\', title) + '.mp3');
+                            console.log('test4')
+                        }
+                    } catch (err) {
+                        console.log('Problem is here ig - 1')
+                        console.error(err)
                     }
-                } catch (err) {
-                    console.error(err)
-                }
-                
 
-                let resource = createAudioResource(join(__dirname, '\\..\\files\\songs\\song_' + guildId + '.mp3'))
+                    console.log('4 - ' + url)
 
-                connection.subscribe(player);
-                player.play(resource);
-                player.addListener('stateChange', async (oldOne, newOne) => {
-                    if (newOne.status == "idle") {
-                        module.exports.playNextSong(guildId);
+
+                    let resource;
+                    try {
+                        resource = createAudioResource(join(__dirname, '\\..\\files\\songs\\song_' + guildId + '.mp3'))
+                    } catch {
+                        console.log('Problem here ig - 2')
                     }
-                })
-            });
-        })
 
-        module.exports.manageDisplay(url, guildId);
+                    connection.subscribe(player);
+                    player.play(resource);
+                    player.addListener('stateChange', async (oldOne, newOne) => {
+                        if (newOne.status == "idle") {
+                            module.exports.playNextSong(guildId);
+                        }
+                    })
 
+                    module.exports.manageDisplay(url, guildId);
+                });
+            })
+        } catch {
+            console.log('Let me cry')
+            this.playYTVideo(guildId, url)
+        }
+
+
+
+        console.log(url)
+        console.log(player);
         return player;
     },
 
     async playSpotifySong(guildId, url) {
+        console.log('wut')
         //Removes old song if there
         try {
             fs.unlinkSync(join(__dirname, '\\..\\files\\songs\\song_' + guildId + '.mp3'));
@@ -181,7 +217,7 @@ module.exports = {
         return player;
     },
 
-    playNextSong(guildId) {
+    async playNextSong(guildId) {
         //Increses the index of the queue by 1
         let queueIndex = 0;
         for (let i = 0; i < queueIndexes.length; i++) {
@@ -199,7 +235,7 @@ module.exports = {
 
         if (queueIndex < queue.length) {
             if (queue[queueIndex].includes('youtube')) {
-                module.exports.playYTVideo(guildId, queue[queueIndex]);
+                await module.exports.playYTVideo(guildId, queue[queueIndex]);
             } else if (queue[queueIndex].includes('spotify')) {
                 module.exports.playSpotifySong(guildId, queue[queueIndex]);
             }
@@ -249,7 +285,7 @@ module.exports = {
                 queue = module.exports.getQueue(guildId, false)
 
                 if (queue.length == 0) {
-                    module.exports.playYTVideo(guildId, result.items[0].videoUrl);
+                    await module.exports.playYTVideo(guildId, result.items[0].videoUrl);
                     //await interaction.reply(`Playing ${url}`);
                 } else {
                     //await interaction.reply('Added to the queue');
@@ -323,5 +359,16 @@ module.exports = {
         }
 
         return null;
+    },
+
+    changeQueueIndex(guildId, newIndex) {
+        for (let i = 0; i < queueIndexes.length; i++) {
+            if (queueIndexes[i][1] == guildId) {
+                queueIndexes[i][0] = newIndex;
+                return queueIndexes[i][0];
+            }
+        }
+
+        return 0;
     }
 }
