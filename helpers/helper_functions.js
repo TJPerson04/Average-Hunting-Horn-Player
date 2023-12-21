@@ -182,6 +182,57 @@ module.exports = {
         }
     },
 
+    async changePauseButton(state, guildId) {
+        let currentMessageIndex = module.exports.getCurrentMessageIndex(guildId)
+        let currentInteractionIndex = module.exports.getCurrentInteractionIndex(guildId)
+
+        let pauseEmoji;
+        if (state == 'paused') {
+            pauseEmoji = '<:play:1124382171633819758>'
+        } else {
+            pauseEmoji = '<:pause_trans:1132482406453092482>'
+        }
+
+        const prevButton = new ButtonBuilder()
+            .setCustomId('prev')
+            .setEmoji('<:previous_trans:1132482554570735657>')
+            .setStyle(ButtonStyle.Primary)
+
+        const shuffleButton = new ButtonBuilder()
+            .setCustomId('shuffle')
+            .setEmoji('<:shuffle:1132485858537254984>')
+            .setStyle(ButtonStyle.Primary)
+
+        const stopButton = new ButtonBuilder()
+            .setCustomId('stop')
+            .setEmoji('<:trans_stop:1132480218343424020>')
+            .setStyle(ButtonStyle.Danger);
+
+        const pauseButton = new ButtonBuilder()
+            .setCustomId('pause')
+            .setEmoji(pauseEmoji)
+            .setStyle(ButtonStyle.Secondary)
+
+        const skipButton = new ButtonBuilder()
+            .setCustomId('skip')
+            .setEmoji('<:next_trans:1132482765015748689>')
+            .setStyle(ButtonStyle.Primary);
+
+        const row = new ActionRowBuilder()
+            .addComponents(prevButton, shuffleButton, stopButton, pauseButton, skipButton);
+
+        try {
+            await currentInteraction[currentInteractionIndex][1].editReply({
+                components: [row]
+            })
+        } catch {
+            await currentMessage[currentMessageIndex][1].edit({
+                components: [row]
+            })
+        }
+        return true
+    },
+
     //Creates server specific queue
     getQueue(guildId, isWithMembers) {
         let queue = []
