@@ -4,6 +4,8 @@ const stop = require('../button-commands/stop');
 const pause = require('../button-commands/pause');
 const prev = require('../button-commands/previous');
 const shuffle = require('../button-commands/shuffle');
+const { currentMessage } = require('../index');
+const { changePauseButton } = require('../helpers/helper_functions')
 
 
 module.exports = {
@@ -34,10 +36,8 @@ module.exports = {
                 const result = await pause.execute(interaction);
 
                 //TODO: Make it so that when paused/played the button emoji changes from a pause to a play symbol
-                //Also, the custom emojis will not work in other servers, fix that
-                if (result == 'paused') {
-                    console.log(interaction);
-                }
+                //Also, the custom emojis will not work in other servers, fix that (actually they might)
+                await changePauseButton(result, interaction.guild.id)
             } else if (interaction.customId == 'prev') {
                 prev.execute(interaction);
             } else if (interaction.customId == 'shuffle') {
