@@ -88,6 +88,31 @@ module.exports = {
         })
     },
 
+    async displayDownloadPercent(perc, guildId, url) {
+        let currentInteractionIndex = module.exports.getCurrentInteractionIndex(guildId);
+        let currentMessageIndex = module.exports.getCurrentMessageIndex(guildId);
+
+        if (currentMessageIndex == null) {
+            console.log(currentMessage);
+            return
+        }
+
+        //This is a little weird but edits the interaction if it 
+        //can (so that it isn't constantly defered), 
+        //and edits the message if it can't (after 15 minutes)
+        let response;
+        percFormatted = Math.round(perc).toString();
+        try {
+            response = await currentInteraction[currentInteractionIndex][1].editReply({
+                content: `Loading ${url}\n${percFormatted}%`
+            })
+        } catch (err) {
+            response = await currentMessage[currentMessageIndex][1].edit({
+                content: `Loading ${url}\n${percFormatted}%`
+            });
+        }
+    },
+
     //Creates server specific queue
     getQueue(guildId, isWithMembers) {
         let queue = []
@@ -125,6 +150,7 @@ module.exports = {
                 itag: 140
             }, (perc) => { 
                 console.log(perc)
+                module.exports.displayDownloadPercent(perc, guildId, url)
             }, async () => {
                 console.log('1.5 - ' + url)
                 await ytConverter.getInfo(url).then(async info => {
