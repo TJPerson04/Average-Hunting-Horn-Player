@@ -117,5 +117,12 @@ module.exports = {
         } else if (!url.includes('playlist') && (url.includes('youtube') || url.includes('spotify'))) {
             //await interaction.reply(`Added ${url} to the queue`);
         }
+
+        if (currentInteraction[currentInteractionIndex][1] != interaction) {
+            interaction.editReply('Added Song')
+            setTimeout(() => {
+                interaction.deleteReply()
+            }, 2000)
+        }
     }
 }

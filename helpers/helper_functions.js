@@ -77,7 +77,7 @@ module.exports = {
                         "url": `${thumbnailUrl}`,
                         "height": 0,
                         "width": 0
-                      },
+                    },
                     "author": {
                         "name": `Currently Playing `
                     },
@@ -111,28 +111,74 @@ module.exports = {
         })
     },
 
-    async displayDownloadPercent(perc, guildId, url) {
+    async displayDownloadPercent(perc, guildId, url, videoTitle, thumbnailUrl, singer, channelUrl) {
         let currentInteractionIndex = module.exports.getCurrentInteractionIndex(guildId);
         let currentMessageIndex = module.exports.getCurrentMessageIndex(guildId);
+        let percFormatted = Math.round(perc).toString();
 
         if (currentMessageIndex == null) {
             console.log(currentMessage);
             return
         }
 
+        //Gets user's name to display who added the current song
+        let queue = this.getQueue(guildId, true);
+        let queueIndex = this.getQueueIndex(guildId);
+        console.log(queueIndex);
+        let memberId = queue[queueIndex][1];
+        let guild = await client.guilds.fetch(guildId);
+        let member = await guild.members.fetch(memberId);
+
+        let progressBar = ""
+        for (let i = 0; i < Math.round(perc / 10); i++) {
+            progressBar += "█"
+        }
+        for (let i = 0; i < 10 - Math.round(perc / 10); i++) {
+            progressBar += "▒"
+        }
+
+        // Determines loading percentage
+        // The message to be sent
+        let outputMessage = {
+            "content": "",
+            "tts": false,
+            "embeds": [
+                {
+                    "type": "rich",
+                    "title": `${videoTitle}`,
+                    "description": `*[${singer}](${channelUrl})*`,
+                    "color": `${member.user.accentColor ? member.user.accentColor : 0xffe897}`,
+                    "thumbnail": {
+                        "url": `${thumbnailUrl}`,
+                        "height": 0,
+                        "width": 0
+                    },
+                    "fields": [
+                        {
+                            "name": `${progressBar}`,
+                            "value": `${percFormatted}%`
+                        }
+                    ],
+                    "author": {
+                        "name": `Loading`
+                    },
+                    "footer": {
+                        "text": `Added by ${member.nickname ? member.nickname : member.user.globalName}`,  // If the user has a nickname in this server, use that. Otherwise, just use their username
+                        "icon_url": `${member.avatarURL() ? member.avatarURL() : member.user.displayAvatarURL()}`  // If the user has a server specific avatar, display that. Otherwise, just use their global avatar
+                    },
+                    "url": `${url}`
+                }
+            ]
+        }
+
         //This is a little weird but edits the interaction if it 
         //can (so that it isn't constantly defered), 
         //and edits the message if it can't (after 15 minutes)
         let response;
-        percFormatted = Math.round(perc).toString();
         try {
-            response = await currentInteraction[currentInteractionIndex][1].editReply({
-                content: `Loading ${url}\n${percFormatted}%`
-            })
+            response = await currentInteraction[currentInteractionIndex][1].editReply(outputMessage)
         } catch (err) {
-            response = await currentMessage[currentMessageIndex][1].edit({
-                content: `Loading ${url}\n${percFormatted}%`
-            });
+            response = await currentMessage[currentMessageIndex][1].edit(outputMessage);
         }
     },
 
@@ -171,9 +217,17 @@ module.exports = {
                 url: url,
                 directoryDownload: __dirname + '\\..\\files\\songs',
                 itag: 140
-            }, (perc) => {
+            }, async (perc) => {
                 console.log(perc)
-                module.exports.displayDownloadPercent(perc, guildId, url)
+                await ytConverter.getInfo(url).then(async info => {
+                    let thumbnailUrl = info.thumbnails[info.thumbnails.length - 1].url
+                    let singer = info.author.name
+                    let channelUrl = info.author.channel_url
+                    if (singer.includes("- Topic")) {
+                        singer = singer.replaceAll("- Topic", "")  // For some reason a lot of the authors have "- Topic" at the end and it is annoying
+                    }
+                    module.exports.displayDownloadPercent(perc, guildId, url, info.title, thumbnailUrl, singer, channelUrl)
+                })
             }, async () => {
                 console.log('1.5 - ' + url)
                 await ytConverter.getInfo(url).then(async info => {
@@ -221,7 +275,7 @@ module.exports = {
                         }
                     })
 
-                    let thumbnailUrl = info.thumbnails[4].url
+                    let thumbnailUrl = info.thumbnails[info.thumbnails.length - 1].url
                     let singer = info.author.name
                     let channelUrl = info.author.channel_url
                     if (singer.includes("- Topic")) {
@@ -314,7 +368,17 @@ module.exports = {
                     }
                 }
             } else {
-                console.log('Reched the end of the queue');
+                console.log('Reached the end of the queue');
+
+                // Resets to queueIndex to 0
+                for (let i = 0; i < queueIndexes.length; i++) {
+                    if (queueIndexes[i][1] == guildId) {
+                        queueIndexes[i][0] = 0;
+                        break;
+                    }
+                }
+
+                // Clears queue
                 for (let i = 0; i < masterQueue.length; i++) {
                     if (masterQueue[i][0] == guildId) {
                         masterQueue.splice(i, 1);
