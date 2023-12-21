@@ -16,7 +16,7 @@ require('dotenv').config();
 
 
 module.exports = {
-    async manageDisplay(url, guildId) {
+    async manageDisplay(url, guildId, videoTitle, thumbnailUrl) {
         const prevButton = new ButtonBuilder()
             .setCustomId('prev')
             .setEmoji('<:previous_trans:1132482554570735657>')
@@ -61,25 +61,47 @@ module.exports = {
             return
         }
 
+        // The message to be sent
+        let outputMessage = {
+            "content": "",
+            "components": [row],
+            "tts": false,
+            "embeds": [
+                {
+                    "type": "rich",
+                    "title": `${videoTitle}`,
+                    "description": "",
+                    "color": 0xffe897,
+                    "thumbnail": {
+                        "url": `${thumbnailUrl}`,
+                        "height": 0,
+                        "width": 0
+                    },
+                    "author": {
+                        "name": `Currently Playing `
+                    },
+                    "footer": {
+                        "text": `Added by ${member.nickname ? member.nickname : member.user.globalName}`,  // If the user has a nickname in this server, use that. Otherwise, just use their username
+                        "icon_url": `${member.avatarURL() ? member.avatarURL() : member.user.displayAvatarURL()}`  // If the user has a server specific avatar, display that. Otherwise, just use their global avatar
+                    },
+                    "url": `${url}`
+                }
+            ]
+        }
+
         //This is a little weird but edits the interaction if it 
         //can (so that it isn't constantly defered), 
         //and edits the message if it can't (after 15 minutes)
         let response;
         try {
-            response = await currentInteraction[currentInteractionIndex][1].editReply({
-                content: "Currently playing " + url + "\nAdded by " + member.toString(),
-                components: [row]
-            })
+            response = await currentInteraction[currentInteractionIndex][1].editReply(outputMessage)
         } catch (err) {
-            response = await currentMessage[currentMessageIndex][1].edit({
-                content: "Currently playing " + url + "\nAdded by " + member.toString(),
-                components: [row]
-            });
+            response = await currentMessage[currentMessageIndex][1].edit(outputMessage);
         }
 
-        const collector = response.createMessageComponentCollector({ 
-            componentType: ComponentType.StringSelect, 
-            time: 3_600_000 
+        const collector = response.createMessageComponentCollector({
+            componentType: ComponentType.StringSelect,
+            time: 3_600_000
         });
 
         collector.on('collect', async i => {
@@ -148,16 +170,17 @@ module.exports = {
                 url: url,
                 directoryDownload: __dirname + '\\..\\files\\songs',
                 itag: 140
-            }, (perc) => { 
+            }, (perc) => {
                 console.log(perc)
                 module.exports.displayDownloadPercent(perc, guildId, url)
             }, async () => {
                 console.log('1.5 - ' + url)
                 await ytConverter.getInfo(url).then(async info => {
                     console.log('2 - ' + url)
-                    let title = info.title;
+                    console.log(info)
+                    let titleOrig = info.title;
                     //Downloaded files can't handle colons, so this removes them
-                    title = title.replaceAll(':', '').replaceAll('|', '').replaceAll(',', '').replaceAll('\\', '').replaceAll('/', '').replaceAll('?', '').replaceAll('"', '').replaceAll('*', '');
+                    title = titleOrig.replaceAll(':', '').replaceAll('|', '').replaceAll(',', '').replaceAll('\\', '').replaceAll('/', '').replaceAll('?', '').replaceAll('"', '').replaceAll('*', '');
 
                     //Makes sure that if the skip/previous button is spammed, only the correct song actually plays
                     //Doesn't really work that well tbh (It said "this.getQueue is not a function")
@@ -198,7 +221,9 @@ module.exports = {
                         }
                     })
 
-                    module.exports.manageDisplay(url, guildId);
+                    let thumbnailUrl = info.thumbnails[4].url
+
+                    module.exports.manageDisplay(url, guildId, titleOrig, thumbnailUrl);
                 });
             })
         } catch {
