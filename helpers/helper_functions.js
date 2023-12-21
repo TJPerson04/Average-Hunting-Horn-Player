@@ -16,7 +16,7 @@ require('dotenv').config();
 
 
 module.exports = {
-    async manageDisplay(url, guildId, videoTitle, thumbnailUrl) {
+    async manageDisplay(url, guildId, videoTitle, thumbnailUrl, singer, channelUrl) {
         const prevButton = new ButtonBuilder()
             .setCustomId('prev')
             .setEmoji('<:previous_trans:1132482554570735657>')
@@ -52,6 +52,7 @@ module.exports = {
         let memberId = queue[queueIndex][1];
         let guild = await client.guilds.fetch(guildId);
         let member = await guild.members.fetch(memberId);
+        console.log(member)
 
         let currentInteractionIndex = module.exports.getCurrentInteractionIndex(guildId);
         let currentMessageIndex = module.exports.getCurrentMessageIndex(guildId);
@@ -70,13 +71,13 @@ module.exports = {
                 {
                     "type": "rich",
                     "title": `${videoTitle}`,
-                    "description": "",
-                    "color": 0xffe897,
-                    "thumbnail": {
+                    "description": `*[${singer}](${channelUrl})*`,
+                    "color": `${member.user.accentColor ? member.user.accentColor : 0xffe897}`,
+                    "image": {
                         "url": `${thumbnailUrl}`,
                         "height": 0,
                         "width": 0
-                    },
+                      },
                     "author": {
                         "name": `Currently Playing `
                     },
@@ -177,7 +178,6 @@ module.exports = {
                 console.log('1.5 - ' + url)
                 await ytConverter.getInfo(url).then(async info => {
                     console.log('2 - ' + url)
-                    console.log(info)
                     let titleOrig = info.title;
                     //Downloaded files can't handle colons, so this removes them
                     title = titleOrig.replaceAll(':', '').replaceAll('|', '').replaceAll(',', '').replaceAll('\\', '').replaceAll('/', '').replaceAll('?', '').replaceAll('"', '').replaceAll('*', '');
@@ -222,8 +222,13 @@ module.exports = {
                     })
 
                     let thumbnailUrl = info.thumbnails[4].url
+                    let singer = info.author.name
+                    let channelUrl = info.author.channel_url
+                    if (singer.includes("- Topic")) {
+                        singer = singer.replaceAll("- Topic", "")  // For some reason a lot of the authors have "- Topic" at the end and it is annoying
+                    }
 
-                    module.exports.manageDisplay(url, guildId, titleOrig, thumbnailUrl);
+                    module.exports.manageDisplay(url, guildId, titleOrig, thumbnailUrl, singer, channelUrl);
                 });
             })
         } catch {
