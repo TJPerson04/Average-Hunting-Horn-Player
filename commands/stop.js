@@ -1,10 +1,12 @@
-const { SlashCommandBuilder, Guild } = require("discord.js");
+// Libraries
+const { masterQueue, isInspirationPlaying } = require('../index');
+
+const { SlashCommandBuilder } = require("discord.js");
 const { createAudioResource } = require('@discordjs/voice')
-const { masterQueue } = require('../index');
-const fs = require('fs');
-require('dotenv').config();
-const index = require('../index');
 const { join } = require('node:path');
+
+require('dotenv').config();
+
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -31,9 +33,9 @@ module.exports = {
         currentInteraction.splice(currentInteractionIndex, 1);
 
         //Stops inspirobot voice
-        for (let i = 0; i < index.isInspirationPlaying.length; i++) {
-            if (index.isInspirationPlaying[i][1] == interaction.guildId) {
-                index.isInspirationPlaying[i][0] = false
+        for (let i = 0; i < isInspirationPlaying.length; i++) {
+            if (isInspirationPlaying[i][1] == interaction.guildId) {
+                isInspirationPlaying[i][0] = false
             }
         }
 

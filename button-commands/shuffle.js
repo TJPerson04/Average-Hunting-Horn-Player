@@ -1,5 +1,7 @@
-const { masterQueue } = require("..");
+// Libraries
+const { masterQueue } = require("../index");
 const { getQueue, getQueueIndex } = require("../helpers/helper_functions");
+
 require('dotenv').config();
 
 

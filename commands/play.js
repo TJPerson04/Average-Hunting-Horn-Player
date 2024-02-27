@@ -1,9 +1,12 @@
-const { SlashCommandBuilder, Guild, filter, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require("discord.js");
-const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
-const Spotify = require('spotifydl-core').default;
-const { masterQueue, isQueueSetUp, queueIndexes, currentInteraction, currentMessage } = require('../index');
+// Libraries
+const { masterQueue, queueIndexes, currentInteraction, currentMessage } = require('../index');
 const { getQueue, isQueueHere, getCurrentInteractionIndex, getCurrentMessageIndex, changeQueueIndex } = require("../helpers/helper_functions");
 const { playYTVideo, playSpotifySong, addYTPlaylist, addSpotifyPlaylist } = require('../helpers/song_playing');
+
+const { SlashCommandBuilder } = require("discord.js");
+const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
+const Spotify = require('spotifydl-core').default;
+
 const spotifyCredentials = {
     clientId: process.env.spotifyClientId,
     clientSecret: process.env.spotifyClientSecret
@@ -11,6 +14,7 @@ const spotifyCredentials = {
 const spotify = new Spotify(spotifyCredentials);
 
 require('dotenv').config();
+
 
 let queue = []
 

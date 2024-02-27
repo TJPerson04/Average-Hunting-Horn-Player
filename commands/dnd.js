@@ -1,7 +1,11 @@
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, getVoiceConnection } = require('@discordjs/voice'); const { SlashCommandBuilder, Guild } = require("discord.js");
-require('dotenv').config();
+// Libraries
 const index = require('../index');
+
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, getVoiceConnection } = require('@discordjs/voice'); const { SlashCommandBuilder, Guild } = require("discord.js");
 const { join } = require('node:path');
+
+require('dotenv').config();
+
 
 module.exports = {
     data: new SlashCommandBuilder()

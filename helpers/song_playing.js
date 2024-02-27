@@ -16,6 +16,7 @@ const spotifyCredentials = {
 }
 const spotify = new Spotify(spotifyCredentials);
 
+
 module.exports = {
     /**
      * Plays a youtube video through a voice connection in the given server

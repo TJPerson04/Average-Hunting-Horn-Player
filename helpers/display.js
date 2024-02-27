@@ -1,7 +1,9 @@
 // Libraries
-const { ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType, ClientUser, Client } = require('discord.js');
 const { currentInteraction, currentMessage } = require('../index');
 const { getCurrentSongOwner, getCurrentInteractionIndex, getCurrentMessageIndex } = require('./helper_functions');
+
+const { ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType } = require('discord.js');
+
 
 // Constants
 PREVIOUS_BUTTON_EMOJI = '<:previous_trans:1132482554570735657>';
@@ -11,7 +13,7 @@ PAUSE_BUTTON_EMOJI = '<:pause_trans:1132482406453092482>';
 PLAY_BUTTON_EMOJI = '<:play:1124382171633819758>';
 SKIP_BUTTON_EMOJI = '<:next_trans:1132482765015748689>';
 
-// Actual functions
+
 module.exports = {
     /**
      * Creates the 5 buttons for the various commands on the output display message

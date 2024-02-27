@@ -1,7 +1,7 @@
 // Libraries
-const { masterQueue, queueIndexes, isLooping, currentInteraction, currentMessage, client } = require('../index');
-const { ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType, ClientUser, Client, GuildMember } = require('discord.js');
+const { masterQueue, queueIndexes, currentInteraction, currentMessage, client } = require('../index');
 
+const { GuildMember } = require('discord.js');
 
 require('dotenv').config();
 

@@ -1,7 +1,9 @@
-const { SlashCommandBuilder, Guild } = require("discord.js");
-const fs = require('fs');
-const { masterQueue } = require("..");
+// Libraries
 const { getQueue } = require("../helpers/helper_functions");
+
+const { SlashCommandBuilder } = require("discord.js");
+const { masterQueue } = require("..");
+
 require('dotenv').config();
 
 
