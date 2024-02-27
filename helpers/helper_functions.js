@@ -1,3 +1,5 @@
+// Libraries
+
 const { masterQueue, queueIndexes, isLooping, currentInteraction, currentMessage, client } = require('../index');
 const { joinVoiceChannel, createAudioPlayer, NoSubscriberBehavior, createAudioResource, getVoiceConnection } = require('@discordjs/voice');
 const { ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType, ClientUser, Client } = require('discord.js');
@@ -16,223 +18,6 @@ require('dotenv').config();
 
 
 module.exports = {
-    async manageDisplay(url, guildId, videoTitle, thumbnailUrl, singer, channelUrl) {
-        const prevButton = new ButtonBuilder()
-            .setCustomId('prev')
-            .setEmoji('<:previous_trans:1132482554570735657>')
-            .setStyle(ButtonStyle.Primary)
-
-        const shuffleButton = new ButtonBuilder()
-            .setCustomId('shuffle')
-            .setEmoji('<:shuffle:1132485858537254984>')
-            .setStyle(ButtonStyle.Primary)
-
-        const stopButton = new ButtonBuilder()
-            .setCustomId('stop')
-            .setEmoji('<:trans_stop:1132480218343424020>')
-            .setStyle(ButtonStyle.Danger);
-
-        const pauseButton = new ButtonBuilder()
-            .setCustomId('pause')
-            .setEmoji('<:pause_trans:1132482406453092482>')
-            .setStyle(ButtonStyle.Secondary)
-
-        const skipButton = new ButtonBuilder()
-            .setCustomId('skip')
-            .setEmoji('<:next_trans:1132482765015748689>')
-            .setStyle(ButtonStyle.Primary);
-
-        const row = new ActionRowBuilder()
-            .addComponents(prevButton, shuffleButton, stopButton, pauseButton, skipButton);
-
-        //Gets user's name to display who added the current song
-        let queue = this.getQueue(guildId, true);
-        let queueIndex = this.getQueueIndex(guildId);
-        console.log(queueIndex);
-        let memberId = queue[queueIndex][1];
-        let guild = await client.guilds.fetch(guildId);
-        let member = await guild.members.fetch(memberId);
-        console.log(member)
-
-        let currentInteractionIndex = module.exports.getCurrentInteractionIndex(guildId);
-        let currentMessageIndex = module.exports.getCurrentMessageIndex(guildId);
-
-        if (currentMessageIndex == null) {
-            console.log(currentMessage);
-            return
-        }
-
-        // The message to be sent
-        let outputMessage = {
-            "content": "",
-            "components": [row],
-            "tts": false,
-            "embeds": [
-                {
-                    "type": "rich",
-                    "title": `${videoTitle}`,
-                    "description": `*[${singer}](${channelUrl})*`,
-                    "color": `${member.user.accentColor ? member.user.accentColor : 0xffe897}`,
-                    "image": {
-                        "url": `${thumbnailUrl}`,
-                        "height": 0,
-                        "width": 0
-                    },
-                    "author": {
-                        "name": `Currently Playing `
-                    },
-                    "footer": {
-                        "text": `Added by ${member.nickname ? member.nickname : member.user.globalName}`,  // If the user has a nickname in this server, use that. Otherwise, just use their username
-                        "icon_url": `${member.avatarURL() ? member.avatarURL() : member.user.displayAvatarURL()}`  // If the user has a server specific avatar, display that. Otherwise, just use their global avatar
-                    },
-                    "url": `${url}`
-                }
-            ]
-        }
-
-        //This is a little weird but edits the interaction if it 
-        //can (so that it isn't constantly defered), 
-        //and edits the message if it can't (after 15 minutes)
-        let response;
-        try {
-            response = await currentInteraction[currentInteractionIndex][1].editReply(outputMessage)
-        } catch (err) {
-            response = await currentMessage[currentMessageIndex][1].edit(outputMessage);
-        }
-
-        const collector = response.createMessageComponentCollector({
-            componentType: ComponentType.StringSelect,
-            time: 3_600_000
-        });
-
-        collector.on('collect', async i => {
-            const selection = i.values[0];
-            await i.reply(`${i.user} has selected ${selection}!`);
-        })
-    },
-
-    async displayDownloadPercent(perc, guildId, url, videoTitle, thumbnailUrl, singer, channelUrl) {
-        let currentInteractionIndex = module.exports.getCurrentInteractionIndex(guildId);
-        let currentMessageIndex = module.exports.getCurrentMessageIndex(guildId);
-        let percFormatted = Math.round(perc).toString();
-
-        if (currentMessageIndex == null) {
-            console.log(currentMessage);
-            return
-        }
-
-        //Gets user's name to display who added the current song
-        let queue = this.getQueue(guildId, true);
-        let queueIndex = this.getQueueIndex(guildId);
-        console.log(queueIndex);
-        let memberId = queue[queueIndex][1];
-        let guild = await client.guilds.fetch(guildId);
-        let member = await guild.members.fetch(memberId);
-
-        let progressBar = ""
-        for (let i = 0; i < Math.round(perc / 10); i++) {
-            progressBar += "█"
-        }
-        for (let i = 0; i < 10 - Math.round(perc / 10); i++) {
-            progressBar += "▒"
-        }
-
-        // Determines loading percentage
-        // The message to be sent
-        let outputMessage = {
-            "content": "",
-            "tts": false,
-            "embeds": [
-                {
-                    "type": "rich",
-                    "title": `${videoTitle}`,
-                    "description": `*[${singer}](${channelUrl})*`,
-                    "color": `${member.user.accentColor ? member.user.accentColor : 0xffe897}`,
-                    "thumbnail": {
-                        "url": `${thumbnailUrl}`,
-                        "height": 0,
-                        "width": 0
-                    },
-                    "fields": [
-                        {
-                            "name": `${progressBar}`,
-                            "value": `${percFormatted}%`
-                        }
-                    ],
-                    "author": {
-                        "name": `Loading`
-                    },
-                    "footer": {
-                        "text": `Added by ${member.nickname ? member.nickname : member.user.globalName}`,  // If the user has a nickname in this server, use that. Otherwise, just use their username
-                        "icon_url": `${member.avatarURL() ? member.avatarURL() : member.user.displayAvatarURL()}`  // If the user has a server specific avatar, display that. Otherwise, just use their global avatar
-                    },
-                    "url": `${url}`
-                }
-            ]
-        }
-
-        //This is a little weird but edits the interaction if it 
-        //can (so that it isn't constantly defered), 
-        //and edits the message if it can't (after 15 minutes)
-        let response;
-        try {
-            response = await currentInteraction[currentInteractionIndex][1].editReply(outputMessage)
-        } catch (err) {
-            response = await currentMessage[currentMessageIndex][1].edit(outputMessage);
-        }
-    },
-
-    async changePauseButton(state, guildId) {
-        let currentMessageIndex = module.exports.getCurrentMessageIndex(guildId)
-        let currentInteractionIndex = module.exports.getCurrentInteractionIndex(guildId)
-
-        let pauseEmoji;
-        if (state == 'paused') {
-            pauseEmoji = '<:play:1124382171633819758>'
-        } else {
-            pauseEmoji = '<:pause_trans:1132482406453092482>'
-        }
-
-        const prevButton = new ButtonBuilder()
-            .setCustomId('prev')
-            .setEmoji('<:previous_trans:1132482554570735657>')
-            .setStyle(ButtonStyle.Primary)
-
-        const shuffleButton = new ButtonBuilder()
-            .setCustomId('shuffle')
-            .setEmoji('<:shuffle:1132485858537254984>')
-            .setStyle(ButtonStyle.Primary)
-
-        const stopButton = new ButtonBuilder()
-            .setCustomId('stop')
-            .setEmoji('<:trans_stop:1132480218343424020>')
-            .setStyle(ButtonStyle.Danger);
-
-        const pauseButton = new ButtonBuilder()
-            .setCustomId('pause')
-            .setEmoji(pauseEmoji)
-            .setStyle(ButtonStyle.Secondary)
-
-        const skipButton = new ButtonBuilder()
-            .setCustomId('skip')
-            .setEmoji('<:next_trans:1132482765015748689>')
-            .setStyle(ButtonStyle.Primary);
-
-        const row = new ActionRowBuilder()
-            .addComponents(prevButton, shuffleButton, stopButton, pauseButton, skipButton);
-
-        try {
-            await currentInteraction[currentInteractionIndex][1].editReply({
-                components: [row]
-            })
-        } catch {
-            await currentMessage[currentMessageIndex][1].edit({
-                components: [row]
-            })
-        }
-        return true
-    },
-
     //Creates server specific queue
     getQueue(guildId, isWithMembers) {
         let queue = []
@@ -245,7 +30,18 @@ module.exports = {
                 }
             }
         }
-        return queue
+        return queue;
+    },
+
+    // Returns an object of the user who submitted the song that is currently playing
+    async getCurrentSongOwner() {
+        let queue = getQueue(guildId, true);
+        let queueIndex = getQueueIndex(guildId);
+        let memberId = queue[queueIndex][1];
+        let guild = await client.guilds.fetch(guildId);
+        let member = await guild.members.fetch(memberId);
+
+        return member;
     },
 
     async playYTVideo(guildId, url) {
@@ -492,7 +288,6 @@ module.exports = {
             })
     },
 
-    //
     isQueueHere(guildId) {
         for (let i = 0; i < queueIndexes.length; i++) {
             if (queueIndexes[i][1] == guildId) {
