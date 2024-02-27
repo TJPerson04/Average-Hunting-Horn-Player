@@ -1,13 +1,15 @@
 // Libraries
-const { masterQueue, queueIndexes, isLooping, currentInteraction, currentMessage, client } = require('../index');
+const { masterQueue, queueIndexes, isLooping, } = require('../index');
 const {displayDownloadPercent, manageDisplay} = require('./display');
 const { getQueue, getQueueIndex } = require('./helper_functions');
-const { joinVoiceChannel, createAudioPlayer, NoSubscriberBehavior, createAudioResource, getVoiceConnection } = require('@discordjs/voice');
+
+const { createAudioPlayer, createAudioResource, getVoiceConnection, AudioPlayer } = require('@discordjs/voice');
+const PlaylistSummary = require('youtube-playlist-summary');
 const ytConverter = require('yt-converter');
 const fs = require('fs');
 const { join } = require('node:path');
-const PlaylistSummary = require('youtube-playlist-summary')
 const Spotify = require('spotifydl-core').default
+
 const spotifyCredentials = {
     clientId: process.env.spotifyClientId,
     clientSecret: process.env.spotifyClientSecret
@@ -15,10 +17,15 @@ const spotifyCredentials = {
 const spotify = new Spotify(spotifyCredentials);
 
 module.exports = {
+    /**
+     * Plays a youtube video through a voice connection in the given server
+     * @param {String} guildId The id of the discord server the bot is playing in
+     * @param {String} url The url of the video to play
+     * @returns {AudioPlayer} The player that is playing the song
+     */
     async playYTVideo(guildId, url) {
         let connection = getVoiceConnection(guildId)
         const player = createAudioPlayer();
-        let test = player;
 
         //Removes old song if there
         try {
@@ -47,9 +54,7 @@ module.exports = {
                     displayDownloadPercent(perc, guildId, url, info.title, thumbnailUrl, singer, channelUrl)
                 })
             }, async () => {
-                console.log('1.5 - ' + url)
                 await ytConverter.getInfo(url).then(async info => {
-                    console.log('2 - ' + url)
                     let titleOrig = info.title;
                     //Downloaded files can't handle colons, so this removes them
                     title = titleOrig.replaceAll(':', '').replaceAll('|', '').replaceAll(',', '').replaceAll('\\', '').replaceAll('/', '').replaceAll('?', '').replaceAll('"', '').replaceAll('*', '');
@@ -59,30 +64,22 @@ module.exports = {
                     let queue = getQueue(guildId, false);
                     let currentUrl = queue[getQueueIndex(guildId)];
 
-                    console.log('3 - ' + url)
                     try {
                         if (url == currentUrl) {
-                            console.log('test1')
                             fs.renameSync(join(__dirname, '\\..\\files\\songs\\', title) + '.mp3', join(__dirname, '\\..\\files\\songs\\song_' + guildId + '.mp3'));
-                            console.log('test2')
                         } else {
-                            console.log('test3')
                             fs.unlinkSync(join(__dirname, '\\..\\files\\songs\\', title) + '.mp3');
-                            console.log('test4')
                         }
                     } catch (err) {
-                        console.log('Problem is here ig - 1')
                         console.error(err)
                     }
 
-                    console.log('4 - ' + url)
 
 
                     let resource;
                     try {
                         resource = createAudioResource(join(__dirname, '\\..\\files\\songs\\song_' + guildId + '.mp3'))
                     } catch {
-                        console.log('Problem here ig - 2')
                     }
 
                     connection.subscribe(player);
@@ -104,17 +101,20 @@ module.exports = {
                 });
             })
         } catch {
-            console.log('Let me cry')
             this.playYTVideo(guildId, url)
         }
 
 
 
-        console.log(url)
-        console.log(player);
         return player;
     },
 
+    /**
+     * Plays a song from spotify through a voice connection in the given server
+     * @param {String} guildId The id of the discord server the bot is playing in
+     * @param {String} url The url of the song to play
+     * @returns {AudioPlayer} The player that is playing the song
+     */
     async playSpotifySong(guildId, url) {
         console.log('wut')
         //Removes old song if there
@@ -145,6 +145,11 @@ module.exports = {
         return player;
     },
 
+    /**
+     * Goes to the next song in the queue
+     * Also updates the queue
+     * @param {String} guildId The id of the discord server the bot is playing in
+     */
     async playNextSong(guildId) {
         //Increses the index of the queue by 1
         let queueIndex = 0;
@@ -209,6 +214,12 @@ module.exports = {
         }
     },
 
+    /**
+     * Adds a every url in a youtube playlist to the queue
+     * @param {String} guildId The id of the discord server the bot is playing in
+     * @param {String} userId The id of the user who added the playlist
+     * @param {String} url The url of the playlist
+     */
     async addYTPlaylist(guildId, userId, url) {
         const config = {
             GOOGLE_API_KEY: process.env.GOOGLE_API_KEY, // require
@@ -224,9 +235,6 @@ module.exports = {
 
                 if (queue.length == 0) {
                     await module.exports.playYTVideo(guildId, result.items[0].videoUrl);
-                    //await interaction.reply(`Playing ${url}`);
-                } else {
-                    //await interaction.reply('Added to the queue');
                 }
 
                 for (let i = 0; i < result.items.length; i++) {
@@ -238,6 +246,12 @@ module.exports = {
             })
     },
 
+    /**
+     * Adds every url in a spotify playlist to the queue of a given server
+     * @param {String} guildId The id of the discord server the bot is playing in
+     * @param {String} userId The id of the user who added the playlist
+     * @param {String} url The url of the playlist
+     */
     async addSpotifyPlaylist(guildId, userId, url) {
         await spotify.getPlaylist(url).then(async (result) => {
             queue = getQueue(guildId, false)
@@ -245,9 +259,6 @@ module.exports = {
 
             if (queue.length == 0) {
                 module.exports.playSpotifySong(guildId, 'https://open.spotify.com/track/' + tracks[0]);
-                //await interaction.reply(`Playing ${url}`);
-            } else {
-                //await interaction.reply('Added to the queue');
             }
 
             for (let i = 0; i < tracks.length; i++) {

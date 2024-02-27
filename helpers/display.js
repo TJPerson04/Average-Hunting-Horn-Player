@@ -59,7 +59,7 @@ module.exports = {
      * Updates the output display
      * @param {*} outputMessage The message to be displayed 
      * @param {String} guildId The id of the discord server the bot is playing in
-     * @returns 
+     * @returns The response of the interaction or message
      */
     async editDisplay(outputMessage, guildId) {
         let currentInteractionIndex = getCurrentInteractionIndex(guildId);
@@ -200,7 +200,7 @@ module.exports = {
      * Switches the emoji for the pause button between a pause symbol and a play symbol
      * @param {String} state "paused" if the song is currently paused, " " otherwise
      * @param {String} guildId The id of the discord server the bot is playing in
-     * @returns 
+     * @returns {boolean} Returns true if run succecssfully
      */
     async changePauseButton(state, guildId) {
         const row = module.exports.createTheButtons(state == 'paused' ? true : false);

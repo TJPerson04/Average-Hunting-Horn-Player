@@ -1,13 +1,19 @@
 // Libraries
 const { masterQueue, queueIndexes, isLooping, currentInteraction, currentMessage, client } = require('../index');
-const { ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType, ClientUser, Client } = require('discord.js');
+const { ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType, ClientUser, Client, GuildMember } = require('discord.js');
 
 
 require('dotenv').config();
 
 
 module.exports = {
-    //Creates server specific queue
+    /**
+     * Gets the queue for a specific server
+     * If isWithMembers is true, the values in the queue are in the format [url, member]
+     * @param {String} guildId The id of the discord server the bot is playing in
+     * @param {boolean} isWithMembers Whether or not the queue should be returned with the member that added each song in the queue
+     * @returns {Array<String>} An array of the urls of the songs in the queue
+     */
     getQueue(guildId, isWithMembers) {
         let queue = []
         for (let i = 0; i < masterQueue.length; i++) {
@@ -23,6 +29,11 @@ module.exports = {
     },
 
     // Returns an object of the user who submitted the song that is currently playing
+    /**
+     * Gets the member who submitted the song that is currently playing
+     * @param {String} guildId The id of the discord server the bot is playing in
+     * @returns {GuildMember}
+     */
     async getCurrentSongOwner(guildId) {
         let queue = module.exports.getQueue(guildId, true);
         let queueIndex = module.exports.getQueueIndex(guildId);
@@ -33,6 +44,11 @@ module.exports = {
         return member;
     },
 
+    /**
+     * Gets whether or not a queue exists for a given server
+     * @param {String} guildId The id of the discord server the bot is playing in
+     * @returns {boolean}
+     */
     isQueueHere(guildId) {
         for (let i = 0; i < queueIndexes.length; i++) {
             if (queueIndexes[i][1] == guildId) {
@@ -42,6 +58,11 @@ module.exports = {
         return false
     },
 
+    /**
+     * Gets the index of the currently playing song in the given server
+     * @param {String} guildId The id of the discord server the bot is playing in
+     * @returns {Number}
+     */
     getQueueIndex(guildId) {
         for (let i = 0; i < queueIndexes.length; i++) {
             if (queueIndexes[i][1] == guildId) {
@@ -52,6 +73,11 @@ module.exports = {
         return 0;
     },
 
+    /**
+     * Gets the index of the interaction that represents the display message in the given server
+     * @param {String} guildId The id of the discord server the bot is playing in
+     * @returns {Number|null}
+     */
     getCurrentInteractionIndex(guildId) {
         for (let i = 0; i < currentInteraction.length; i++) {
             if (currentInteraction[i][0] == guildId) {
@@ -62,6 +88,11 @@ module.exports = {
         return null;
     },
 
+    /**
+     * Gets the index of the message that represents the display message in the given server
+     * @param {String} guildId The id of the discord server the bot is playing in
+     * @returns {Number|null}
+     */
     getCurrentMessageIndex(guildId) {
         for (let i = 0; i < currentMessage.length; i++) {
             if (currentMessage[i][0] == guildId) {
@@ -72,6 +103,12 @@ module.exports = {
         return null;
     },
 
+    /**
+     * Changes the index for the currently playing song for the given server
+     * @param {String} guildId The id of the discord server the bot is playing in
+     * @param {Number} newIndex 
+     * @returns {Number} The new index
+     */
     changeQueueIndex(guildId, newIndex) {
         for (let i = 0; i < queueIndexes.length; i++) {
             if (queueIndexes[i][1] == guildId) {
