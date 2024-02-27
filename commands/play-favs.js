@@ -1,7 +1,8 @@
 const { SlashCommandBuilder, Guild } = require("discord.js");
 const fs = require('fs');
 const { join } = require('node:path');
-const { addYTPlaylist, addSpotifyPlaylist, isQueueHere, getCurrentInteractionIndex, getCurrentMessageIndex, changeQueueIndex } = require("../helpers/helper_functions");
+const { isQueueHere, getCurrentInteractionIndex, getCurrentMessageIndex, changeQueueIndex } = require("../helpers/helper_functions");
+const { addYTPlaylist, addSpotifyPlaylist } = require('../helpers/song_playing')
 const shuffle = require('./shuffle');
 const equality = require('./equality');
 const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');

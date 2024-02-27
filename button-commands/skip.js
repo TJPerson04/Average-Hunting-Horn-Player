@@ -3,6 +3,8 @@ require('dotenv').config();
 
 module.exports = {
     async execute(interaction) {
+        console.log(interaction);
+        console.log(interaction.guildId);
         const { getVoiceConnection, createAudioResource } = require('@discordjs/voice');
 
         const connection = getVoiceConnection(interaction.guildId);

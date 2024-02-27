@@ -1,7 +1,7 @@
 // Libraries
-const { ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js');
+const { ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType, ClientUser, Client } = require('discord.js');
 const { currentInteraction, currentMessage } = require('../index');
-const { getQueue, getQueueIndex, getCurrentInteractionIndex, getCurrentMessageIndex, getCurrentSongOwner } = require('./helper_functions');
+const { getCurrentSongOwner, getCurrentInteractionIndex, getCurrentMessageIndex } = require('./helper_functions');
 
 // Constants
 PREVIOUS_BUTTON_EMOJI = '<:previous_trans:1132482554570735657>';
@@ -13,8 +13,12 @@ SKIP_BUTTON_EMOJI = '<:next_trans:1132482765015748689>';
 
 // Actual functions
 module.exports = {
-    // Returns the row object including all the buttons
-    async createTheButtons(isPaused) {
+    /**
+     * Creates the 5 buttons for the various commands on the output display message
+     * @param {boolean} isPaused Whether or not the song is currently paused
+     * @returns {ActionRowBuilder} The row of components containing the buttons
+     */
+    createTheButtons(isPaused) {
         let pauseEmoji = PAUSE_BUTTON_EMOJI;
         if (isPaused) {
             pauseEmoji = PLAY_BUTTON_EMOJI;
@@ -47,10 +51,16 @@ module.exports = {
 
         const row = new ActionRowBuilder()
             .addComponents(prevButton, shuffleButton, stopButton, pauseButton, skipButton);
-        
+                
         return row;
     },
 
+    /**
+     * Updates the output display
+     * @param {*} outputMessage The message to be displayed 
+     * @param {String} guildId The id of the discord server the bot is playing in
+     * @returns 
+     */
     async editDisplay(outputMessage, guildId) {
         let currentInteractionIndex = getCurrentInteractionIndex(guildId);
         let currentMessageIndex = getCurrentMessageIndex(guildId);
@@ -68,11 +78,21 @@ module.exports = {
         return response;
     },
 
+    /**
+     * Creates the embed for the output message to display and displays it
+     * @param {String} url The url of the song that is currently playing
+     * @param {String} guildId The id of the discord server the bot is playing in
+     * @param {String} videoTitle The title of the song
+     * @param {String} thumbnailUrl The url for the thumbnail of the song
+     * @param {String} singer The name of the singer/band
+     * @param {String} channelUrl The url of the channel
+     */
     async manageDisplay(url, guildId, videoTitle, thumbnailUrl, singer, channelUrl) {
-        const row = this.createTheButtons();
+        
+        const row = module.exports.createTheButtons(false);
 
         //Gets user's name to display who added the current song
-        const member = await getCurrentSongOwner();
+        const member = await getCurrentSongOwner(guildId);
 
         // The message to be sent
         let outputMessage = {
@@ -102,9 +122,9 @@ module.exports = {
             ]
         }
 
-        this.editDisplay(outputMessage, guildId);
+        let response = await module.exports.editDisplay(outputMessage, guildId);
 
-        const collector = response.createMessageComponentCollector({
+        const collector = await response.createMessageComponentCollector({
             componentType: ComponentType.StringSelect,
             time: 3_600_000
         });
@@ -115,11 +135,21 @@ module.exports = {
         })
     },
 
+    /**
+     * Displays a loading bar that represents the progress of the song downloading
+     * @param {Number} perc How much the song has downloaded (percentage)
+     * @param {String} guildId The id of the discord server the bot is playing in
+     * @param {String} url The url of the song
+     * @param {String} videoTitle The title of the song
+     * @param {String} thumbnailUrl The url of the thumbnail
+     * @param {String} singer The singer/band
+     * @param {String} channelUrl The url to the channel
+     */
     async displayDownloadPercent(perc, guildId, url, videoTitle, thumbnailUrl, singer, channelUrl) {
         let percFormatted = Math.round(perc).toString();
 
         //Gets user's name to display who added the current song
-        const member = await getCurrentSongOwner();
+        const member = await getCurrentSongOwner(guildId);
 
         // Determines loading percentage
         let progressBar = ""
@@ -163,17 +193,23 @@ module.exports = {
             ]
         }
 
-        this.editDisplay(outputMessage, guildId);
+        module.exports.editDisplay(outputMessage, guildId);
     },
 
+    /**
+     * Switches the emoji for the pause button between a pause symbol and a play symbol
+     * @param {String} state "paused" if the song is currently paused, " " otherwise
+     * @param {String} guildId The id of the discord server the bot is playing in
+     * @returns 
+     */
     async changePauseButton(state, guildId) {
-        const row = this.createTheButtons(state == 'paused' ? true : false);
+        const row = module.exports.createTheButtons(state == 'paused' ? true : false);
 
         const outputMessage = {
             components: [row]
         }
 
-        this.editDisplay(outputMessage, guildId);
+        module.exports.editDisplay(outputMessage, guildId);
         
         return true
     }
