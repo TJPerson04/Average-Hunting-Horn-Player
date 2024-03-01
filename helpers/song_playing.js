@@ -25,7 +25,7 @@ module.exports = {
      * @returns {AudioPlayer} The player that is playing the song
      */
     async playYTVideo(guildId, url) {
-        console.log($`Now playing ${url}`);
+        console.log(`Now playing ${url}`);
         
         let connection = getVoiceConnection(guildId)
         const player = createAudioPlayer();
@@ -119,7 +119,7 @@ module.exports = {
      */
     async playSpotifySong(guildId, url) {
         console.log('wut')
-        console.log($`Now playing ${url}`);
+        console.log(`Now playing ${url}`);
         //Removes old song if there
         try {
             fs.unlinkSync(join(__dirname, '\\..\\files\\songs\\song_' + guildId + '.mp3'));
