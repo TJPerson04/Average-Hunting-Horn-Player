@@ -3,6 +3,7 @@ const { getVoiceConnection } = require('@discordjs/voice');
 
 require('dotenv').config();
 
+
 module.exports = {
     async execute(interaction) {
         const connection = getVoiceConnection(interaction.guildId);

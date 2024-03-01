@@ -1,6 +1,6 @@
 // Libraries
 const { isQueueHere, getCurrentInteractionIndex, getCurrentMessageIndex, changeQueueIndex } = require("../helpers/helper_functions");
-const { addYTPlaylist, addSpotifyPlaylist } = require('../helpers/song_playing')
+const { addYTPlaylist, addSpotifyPlaylist } = require('../helpers/song_playing');
 const { queueIndexes, currentInteraction, currentMessage } = require('../index');
 const shuffle = require('./shuffle');
 const equality = require('./equality');

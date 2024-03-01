@@ -1,7 +1,7 @@
 // Libraries
 const { isLooping } = require('../index');
 
-const { SlashCommandBuilder, Guild } = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
 
 require('dotenv').config();
 

@@ -4,7 +4,7 @@ const stop = require('../button-commands/stop');
 const pause = require('../button-commands/pause');
 const prev = require('../button-commands/previous');
 const shuffle = require('../button-commands/shuffle');
-const { changePauseButton } = require('../helpers/helper_functions')
+const { changePauseButton } = require('../helpers/display');
 
 const { Events } = require('discord.js');
 
@@ -36,7 +36,7 @@ module.exports = {
                 stop.execute(interaction);
             } else if (interaction.customId == 'pause') {
                 const result = await pause.execute(interaction);
-                await changePauseButton(result, interaction.guild.id)
+                await changePauseButton(result, interaction.guild.id);  // This sometimes doesn't work, not sure why
             } else if (interaction.customId == 'prev') {
                 prev.execute(interaction);
             } else if (interaction.customId == 'shuffle') {

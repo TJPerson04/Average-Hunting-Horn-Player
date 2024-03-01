@@ -2,7 +2,7 @@
 const { getQueue } = require("../helpers/helper_functions");
 
 const { SlashCommandBuilder } = require("discord.js");
-const { masterQueue } = require("..");
+const { masterQueue } = require("../index");
 
 require('dotenv').config();
 

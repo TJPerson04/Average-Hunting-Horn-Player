@@ -1,7 +1,6 @@
 // Libraries
-const index = require('../index');
-
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, getVoiceConnection } = require('@discordjs/voice'); const { SlashCommandBuilder, Guild } = require("discord.js");
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, getVoiceConnection } = require('@discordjs/voice'); 
+const { SlashCommandBuilder } = require("discord.js");
 const { join } = require('node:path');
 
 require('dotenv').config();

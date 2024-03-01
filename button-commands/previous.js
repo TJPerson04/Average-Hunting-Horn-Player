@@ -3,6 +3,7 @@ const { queueIndexes } = require('../index');
 
 require('dotenv').config();
 
+
 module.exports = {
     async execute(interaction) {
         const { getVoiceConnection, createAudioResource } = require('@discordjs/voice');
