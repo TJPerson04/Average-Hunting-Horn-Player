@@ -25,7 +25,8 @@ module.exports = {
      * @returns {AudioPlayer} The player that is playing the song
      */
     async playYTVideo(guildId, url) {
-        console.log(`Now playing ${url}`);
+        console.log('Downloading\x1b[36m', url, '\x1b[0m');
+
         
         let connection = getVoiceConnection(guildId)
         const player = createAudioPlayer();
@@ -45,7 +46,7 @@ module.exports = {
                 directoryDownload: __dirname + '\\..\\files\\songs',
                 itag: 140
             }, async (perc) => {
-                console.log(perc)
+                console.log('\x1b[33m' + perc.toFixed(2) + "%\x1b[0m");
                 await ytConverter.getInfo(url).then(async info => {
                     let thumbnailUrl = info.thumbnails[info.thumbnails.length - 1].url
                     let singer = info.author.name
@@ -86,6 +87,7 @@ module.exports = {
 
                     connection.subscribe(player);
                     player.play(resource);
+                    console.log('Now playing \x1b[36m' + url + '\x1b[0m')
                     player.addListener('stateChange', async (oldOne, newOne) => {
                         if (newOne.status == "idle") {
                             module.exports.playNextSong(guildId);
@@ -119,7 +121,7 @@ module.exports = {
      */
     async playSpotifySong(guildId, url) {
         console.log('wut')
-        console.log(`Now playing ${url}`);
+        console.log('Downloading\x1b[36m', url, '\x1b[0m');
         //Removes old song if there
         try {
             fs.unlinkSync(join(__dirname, '\\..\\files\\songs\\song_' + guildId + '.mp3'));
