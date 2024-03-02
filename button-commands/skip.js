@@ -1,10 +1,11 @@
-const { SlashCommandBuilder, Guild } = require("discord.js");
+// Libraries
+const { getVoiceConnection, createAudioResource } = require('@discordjs/voice');
+
 require('dotenv').config();
+
 
 module.exports = {
     async execute(interaction) {
-        const { getVoiceConnection, createAudioResource } = require('@discordjs/voice');
-
         const connection = getVoiceConnection(interaction.guildId);
 
         if (connection && interaction.member.voice.channel == connection.joinConfig.channelId && connection.receiver.voiceConnection.state.subscription && connection.receiver.voiceConnection.state.subscription.player) {

@@ -1,8 +1,9 @@
-const { SlashCommandBuilder, Guild, EmbedBuilder } = require("discord.js");
-const { masterQueue, queueIndexes } = require('../index');
-const getYoutubeTitle = require('get-youtube-title');
+// Libraries
+const { masterQueue } = require('../index');
 const { getQueueIndex } = require('../helpers/helper_functions');
-require('dotenv').config();
+
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const getYoutubeTitle = require('get-youtube-title');
 const API_KEY = process.env.GOOGLE_API_KEY
 const Spotify = require('spotifydl-core').default;
 
@@ -11,6 +12,9 @@ const spotifyCredentials = {
     clientSecret: process.env.spotifyClientSecret
 }
 const spotify = new Spotify(spotifyCredentials);
+
+require('dotenv').config();
+
 
 //Saw a bug a couple times where queue only showed 4 songs, no clue how to recreate
 module.exports = {

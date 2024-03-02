@@ -1,7 +1,8 @@
-const { SlashCommandBuilder, Guild } = require("discord.js");
+// Libraries
 const { queueIndexes } = require('../index');
-const { getQueueIndex } = require('../helpers/helper_functions');
+
 require('dotenv').config();
+
 
 module.exports = {
     async execute(interaction) {

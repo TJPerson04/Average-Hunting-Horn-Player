@@ -1,16 +1,15 @@
-const { SlashCommandBuilder, Guild } = require("discord.js");
-const { createAudioResource } = require('@discordjs/voice')
-const { masterQueue } = require('../index');
-const fs = require('fs');
-require('dotenv').config();
-const { isInspirationPlaying, currentMessage, currentInteraction } = require('../index');
-const { join } = require('node:path');
+// Libraries
+const { masterQueue, isInspirationPlaying, currentInteraction, currentMessage } = require('../index');
 const { getCurrentMessageIndex, getCurrentInteractionIndex } = require("../helpers/helper_functions");
+
+const { createAudioResource, getVoiceConnection } = require('@discordjs/voice')
+const { join } = require('node:path');
+
+require('dotenv').config();
+
 
 module.exports = {
     async execute(interaction) {
-        const { getVoiceConnection } = require('@discordjs/voice');
-
         const connection = getVoiceConnection(interaction.guildId);
 
         //Removes queue from masterQueue

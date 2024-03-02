@@ -1,10 +1,14 @@
-const { SlashCommandBuilder, Guild, } = require("discord.js");
-const { joinVoiceChannel, createAudioPlayer, NoSubscriberBehavior, createAudioResource, getVoiceConnection } = require('@discordjs/voice');
+// Libraries
+const { isInspirationPlaying } = require('../index')
+
+const { SlashCommandBuilder } = require("discord.js");
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, getVoiceConnection } = require('@discordjs/voice');
 const request = require('request');
 const download = require('download');
 const fs = require('fs');
+
 require('dotenv').config();
-const index = require('../index')
+
 
 let sessionID;
 let picLink = 'http://inspirobot.me/api?generate=true'
@@ -34,15 +38,15 @@ module.exports = {
             //Changes guild's isInspirationPlaying to true
             if (interaction.member.voice.channel) {
                 let inspirationVoiceIndexExists = false
-                for (let i = 0; i < index.isInspirationPlaying.length; i++) {
-                    if (index.isInspirationPlaying[i][1] == interaction.guildId) {
-                        index.isInspirationPlaying[i][0] = true
+                for (let i = 0; i < isInspirationPlaying.length; i++) {
+                    if (isInspirationPlaying[i][1] == interaction.guildId) {
+                        isInspirationPlaying[i][0] = true
                         inspirationVoiceIndexExists = true
                     }
                 }
 
                 if (!inspirationVoiceIndexExists) {
-                    index.isInspirationPlaying.push([true, interaction.guildId])
+                    isInspirationPlaying.push([true, interaction.guildId])
                     inspirationVoiceStatus = true
                 }
 
@@ -85,9 +89,9 @@ async function playMP3File2(voiceChannelId, guild, filePath) {
     //Waits until quote stops, then deletes it from the file and generates a new one
     player.addListener("stateChange", (oldOne, newOne) => {
         let inspirationVoiceStatus = false
-        for (let i = 0; i < index.isInspirationPlaying.length; i++) {
-            if (index.isInspirationPlaying[i][1] == guild.id) {
-                inspirationVoiceStatus = index.isInspirationPlaying[i][0]
+        for (let i = 0; i < isInspirationPlaying.length; i++) {
+            if (isInspirationPlaying[i][1] == guild.id) {
+                inspirationVoiceStatus = isInspirationPlaying[i][0]
             }
         }
 

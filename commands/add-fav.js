@@ -1,7 +1,10 @@
-const { SlashCommandBuilder, Guild } = require("discord.js");
+// Libraries
+const { SlashCommandBuilder } = require("discord.js");
 const { join } = require('node:path')
 const fs = require('fs');
+
 require('dotenv').config();
+
 
 module.exports = {
     data: new SlashCommandBuilder()

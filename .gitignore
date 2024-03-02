@@ -3,11 +3,5 @@
 /node_modules
 /package-lock.json
 /package.json
-/song_1045923759015600219.mp3
-/song_735662776449761400.mp3
-song_1079588640214229012.mp3
-files/224aeda9.mp3
-files/inspirobot/224aeda9.mp3
-files/songs/song_735662776449761400.mp3
-files/songs/song_1045923759015600219.mp3
+files/*
 favs.json

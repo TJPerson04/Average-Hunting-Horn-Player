@@ -1,7 +1,11 @@
-const { SlashCommandBuilder, Guild } = require("discord.js");
+// Libraries
 const { currentMessage, currentInteraction } = require('../index');
 const { getCurrentInteractionIndex, getCurrentMessageIndex } = require('../helpers/helper_functions');
+
+const { SlashCommandBuilder } = require("discord.js");
+
 require('dotenv').config();
+
 
 module.exports = {
     data: new SlashCommandBuilder()
