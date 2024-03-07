@@ -1,7 +1,7 @@
 // Libraries
 const { masterQueue, queueIndexes, isLooping, } = require('../index');
 const {displayDownloadPercent, manageDisplay} = require('./display');
-const { getQueue, getQueueIndex } = require('./helper_functions');
+const { getQueue, getQueueIndex, getSongInfo } = require('./helper_functions');
 
 const { createAudioPlayer, createAudioResource, getVoiceConnection, AudioPlayer } = require('@discordjs/voice');
 const PlaylistSummary = require('youtube-playlist-summary');
@@ -102,6 +102,7 @@ module.exports = {
                     }
 
                     manageDisplay(url, guildId, titleOrig, thumbnailUrl, singer, channelUrl);
+                    console.log(getSongInfo(url));
                 });
             })
         } catch {

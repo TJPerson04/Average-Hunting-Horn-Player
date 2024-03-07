@@ -2,6 +2,7 @@
 const { masterQueue, queueIndexes, currentInteraction, currentMessage, client } = require('../index');
 
 const { GuildMember } = require('discord.js');
+const ytConverter = require('yt-converter');
 
 require('dotenv').config();
 
@@ -118,5 +119,34 @@ module.exports = {
         }
 
         return 0;
+    },
+
+    async getSongInfo(url) {
+        return await ytConverter.getInfo(url).then((i) => {
+            return info = {
+                title: i.title,
+                thumbnailUrl: i.thumbnails[info.thumbnails.length - 1].url,
+                singer: i.author.name,
+                channelUrl: i.author.channel_url
+            }
+        })
+    },
+
+    async getGuildById(guildId) {
+        return await client.guilds.fetch(guildId);
+    },
+
+    async deleteEmojiByName(guildId, name) {
+        let guild = await module.exports.getGuildById(guildId);
+        let emoji = await guild.emojis.fetch()
+            .then(emojis => {
+                return emojis.find(x => x.name == name || x.toString() == name)
+            }).catch(err => console.error(err))
+        return await emoji.delete();
+    },
+
+    async createEmoji(guildId, name, attachment) {
+        let guild = await module.exports.getGuildById(guildId);
+        return await guild.emojis.create({name: name, attachment: attachment});
     }
 }

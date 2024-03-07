@@ -1,6 +1,6 @@
 // Libraries
 const { currentInteraction, currentMessage } = require('../index');
-const { getCurrentSongOwner, getCurrentInteractionIndex, getCurrentMessageIndex } = require('./helper_functions');
+const { getCurrentSongOwner, getCurrentInteractionIndex, getCurrentMessageIndex, deleteEmojiByName, createEmoji } = require('./helper_functions');
 
 const { ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType } = require('discord.js');
 
@@ -214,5 +214,20 @@ module.exports = {
         module.exports.editDisplay(outputMessage, guildId);
         
         return true
+    },
+
+    /**
+     * 
+     * @param {str} guildId 
+     * @param {str} currentTitle 
+     * @param {str} currentThumbnail 
+     * @param {Array<str>} otherTitles 
+     * @param {Array<str>} otherThumbnails 
+     */
+    async manageQueueDisplay(guildId, currentTitle, currentThumbnail, otherTitles, otherThumbnails) {
+        await createEmoji(guildId, 'currentlyPlaying', currentThumbnail)
+        for (let i = 0; i < otherThumbnails.length(); i++) {
+            await createEmoji(guildId, `song-${i + 1}`, otherThumbnails[i]);
+        }
     }
 }
