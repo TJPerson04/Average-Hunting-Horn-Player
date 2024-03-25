@@ -2,7 +2,7 @@
 const { isQueueHere, getCurrentInteractionIndex, getCurrentMessageIndex, changeQueueIndex } = require("../helpers/helper_functions");
 const { addYTPlaylist, addSpotifyPlaylist } = require('../helpers/song_playing');
 const { queueIndexes, currentInteraction, currentMessage } = require('../index');
-const shuffle = require('./shuffle');
+const shuffle = require('../button-commands/shuffle');
 const equality = require('./equality');
 
 const { SlashCommandBuilder } = require("discord.js");
