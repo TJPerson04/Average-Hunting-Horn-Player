@@ -1,5 +1,6 @@
 // Libraries
 const { masterQueue, queueIndexes, currentInteraction, currentMessage, client } = require('../index');
+const { getInfo } = require('yt-converter');
 
 const { GuildMember } = require('discord.js');
 
@@ -118,5 +119,15 @@ module.exports = {
         }
 
         return 0;
+    },
+
+    /**
+     * Gets the title of the given Youtube video
+     * @param {String} url The url of the video
+     * @returns {String} The title of the video
+     */
+    async getYTTitle(url) {
+        let info = await getInfo(url);
+        return info.title;
     }
 }

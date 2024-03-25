@@ -1,6 +1,6 @@
 // Libraries
 const { masterQueue } = require('../index');
-const { getQueueIndex } = require('../helpers/helper_functions');
+const { getQueueIndex, getYTTitle, getQueue } = require('../helpers/helper_functions');
 
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const getYoutubeTitle = require('get-youtube-title');
@@ -22,8 +22,8 @@ module.exports = {
         .setName('queue')
         .setDescription('Displays the next five songs in the queue - UNDER CONSTRUCTION'),
     async execute(interaction) {
-        let queue = this.getQueue(interaction.guildId);
-        console.log(queue)
+        await interaction.deferReply();
+        let queue = getQueue(interaction.guildId, false);
 
         let queueIndex = getQueueIndex(interaction.guildId);
 
@@ -51,60 +51,15 @@ module.exports = {
             limit = videoIds.length - start
         }
 
-        console.log('limit: ' + limit)
+        // console.log('limit: ' + limit)
 
-        await this.getTitles(interaction, videoIds, start, '', start, limit)
-    },
-    getQueue(guildId) {
-        let queue = []
-        for (let i = 0; i < masterQueue.length; i++) {
-            if (masterQueue[i][0] == guildId) {
-                queue.push(masterQueue[i][1]);
-            }
+        output = `QUEUE \`\`\`\n`;
+        for (let i = queueIndex; i < queueIndex + limit; i++) {
+            output += "\n" + i + ": " + await getYTTitle(queue[i]);
         }
-        return queue
-    },
-    async getTitles(interaction, videoIds, numTitles, startText, ogNumTitle, limit) {
-        //Recursive, goes through itself *limit* times, only outputs one the fifth time
-        //Probably not amazing but fixed problem where ending code ran before callback functions
-        //Could prob make for loop where reply inside callback  (Tried this, didn't work, callbacks were still called in a random order)
-        if (numTitles < ogNumTitle + limit) {
-            let queueIndex = getQueueIndex(interaction.guildId);
+        output += `\`\`\``;
 
-            if (videoIds[numTitles].includes('spotify')) {
-                await spotify.getTrack(videoIds[numTitles]).then(async (title) => {
-                    startText += (numTitles + 1 - queueIndex) + ': ' + title.name + '\n';
-
-                    let test = await this.getTitles(interaction, videoIds, numTitles + 1, startText, ogNumTitle, limit)
-                    if (test) {
-                        startText = test + startText
-                    }
-
-                    if (numTitles == ogNumTitle + limit - 1) {
-                        await interaction.reply(`\`\`\`---QUEUE---\n${startText}\`\`\``)
-                    }
-                    return startText;
-                })
-            } else {
-                getYoutubeTitle(videoIds[numTitles], API_KEY, async (err, title) => {
-                    if (err) {
-                        console.error(err)
-                    } else {
-                        startText += (numTitles + 1 - queueIndex) + ': ' + title + '\n';
-                    }
-                    let test = await this.getTitles(interaction, videoIds, numTitles + 1, startText, ogNumTitle, limit)
-                    if (test) {
-                        startText = test + startText
-                    }
-
-                    if (numTitles == ogNumTitle + limit - 1) {
-                        //await interaction.reply(':sob:')
-                        await interaction.reply(`QUEUE \`\`\`${startText}\`\`\``)
-                    }
-                    return startText;
-                })
-            }
-        }
+        await interaction.editReply(output);
     }, createOutput(text) { //Trying to create an embed to pretty up queue display, UNDER CONSTUCTION
         const outputEmbed = new EmbedBuilder()
             .setColor(0x0099FF)
