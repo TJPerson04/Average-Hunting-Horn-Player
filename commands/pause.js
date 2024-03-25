@@ -1,7 +1,7 @@
 // Libraries
-const { SlashCommandBuilder } = require("discord.js");
+const pause = require("../button-commands/pause");
 
-require('dotenv').config();
+const { SlashCommandBuilder } = require("discord.js");
 
 
 module.exports = {
@@ -9,23 +9,14 @@ module.exports = {
         .setName('pause')
         .setDescription('Pauses/unpauses whatever is playing'),
     async execute(interaction) {
-        const { getVoiceConnection, createAudioResource } = require('@discordjs/voice');
-
-        const connection = getVoiceConnection(interaction.guildId);
-
-        if (connection && interaction.member.voice.channel == connection.joinConfig.channelId && connection.receiver.voiceConnection.state.subscription.player) {
-            if (connection.receiver.voiceConnection.state.subscription.player.state.status != 'paused') {
-                connection.receiver.voiceConnection.state.subscription.player.pause();
-                await interaction.reply('Paused video');
-            } else {
-                connection.receiver.voiceConnection.state.subscription.player.unpause();
-                await interaction.reply('Unpaused video');
-            }
-
-        } else if (!connection) {
-            await interaction.reply('There is nothing to pause');
+        let result = await pause.execute(interaction)
+        if (result) {
+            await interaction.reply("Successfully " + result + " the song");
+            setTimeout(() => {
+                interaction.deleteReply();
+            }, 5000);
         } else {
-            await interaction.reply('You must be in the voice channel to use this command');
+            interaction.reply("There was an error pausing/unpausing the song");
         }
     }
 }

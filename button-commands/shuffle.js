@@ -74,6 +74,8 @@ module.exports = {
         }
 
         console.log('Spread queue between ' + people.length + ' people');
+
+        return true;
     },
     shuffle(array) {
         for (var i = array.length - 1; i > 0; i--) {

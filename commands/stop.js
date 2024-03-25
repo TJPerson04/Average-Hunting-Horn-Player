@@ -1,79 +1,21 @@
 // Libraries
-const { masterQueue, isInspirationPlaying } = require('../index');
+const stop = require('../button-commands/stop');
 
 const { SlashCommandBuilder } = require("discord.js");
-const { createAudioResource } = require('@discordjs/voice')
-const { join } = require('node:path');
-
-require('dotenv').config();
 
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('stop')
-        .setDescription('Exits Voice Channel'),
+        .setDescription('Stops the bot and empties the queue'),
     async execute(interaction) {
-        const { getVoiceConnection } = require('@discordjs/voice');
-
-        const connection = getVoiceConnection(interaction.guildId);
-
-        //Removes queue from masterQueue
-        for (let i = 0; i < masterQueue.length; i++) {
-            if (masterQueue[i][0] == interaction.guildId) {
-                masterQueue.splice(i, 1);
-                i = -1;
-            }
-        }
-
-        //Removes current message & current index
-        let currentMessageIndex = getCurrentMessageIndex(interaction.guildId);
-        let currentInteractionIndex = getCurrentInteractionIndex(interaction.guildId);
-
-        currentMessage.splice(currentMessageIndex, 1);
-        currentInteraction.splice(currentInteractionIndex, 1);
-
-        //Stops inspirobot voice
-        for (let i = 0; i < isInspirationPlaying.length; i++) {
-            if (isInspirationPlaying[i][1] == interaction.guildId) {
-                isInspirationPlaying[i][0] = false
-            }
-        }
-
-        if (connection) {
-            //console.log(connection.receiver.voiceConnection.state.subscription.player)
-            //connection.destroy();
-            if (connection.receiver.voiceConnection.state.subscription) {
-                connection.receiver.voiceConnection.state.subscription.player.play(createAudioResource(join(__dirname, '\\..\\portal_radio.mp3')))
-                connection.receiver.voiceConnection.state.subscription.player.stop();    
-            }
-            connection.receiver.voiceConnection.disconnect();
-            connection.receiver.voiceConnection.destroy();
-            await interaction.reply('Successfully stopped the playing')
+        if (stop.execute(interaction)) {
+            await interaction.reply("Bot successfully stopped");
+            setTimeout(() => {
+                interaction.deleteReply();
+            }, 5000);
         } else {
-            await interaction.reply('There was nothing playing')
+            await interaction.reply("There was an error stopping the bot");
         }
-
-        //Removes queue from masterQueue
-        for (let i = 0; i < masterQueue.length; i++) {
-            if (masterQueue[i][0] == interaction.guildId) {
-                masterQueue.splice(i, 1);
-                i = 0;
-            }
-        }
-
-        /*//Deletes any files in files folder
-        let files = fs.readdirSync(__dirname + '\\..\\files', (err) => {
-            if (err) {
-                console.error(err)
-            }
-        })
-
-        for (let i = 0; i < files.length; i++) {
-            fs.unlink(__dirname + '\\..\\files\\' + files[i], (err) => {
-                if (err) {
-                    console.error(err)
-                }
-            })
-        }*/
     }
 }

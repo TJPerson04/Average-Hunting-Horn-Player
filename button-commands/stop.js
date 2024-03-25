@@ -49,14 +49,6 @@ module.exports = {
             return false
         }
 
-        //Removes queue from masterQueue
-        for (let i = 0; i < masterQueue.length; i++) {
-            if (masterQueue[i][0] == interaction.guildId) {
-                masterQueue.splice(i, 1);
-                i = 0;
-            }
-        }
-
         /*//Deletes any files in files folder
         let files = fs.readdirSync(__dirname + '\\..\\files', (err) => {
             if (err) {
