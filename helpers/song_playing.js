@@ -43,7 +43,7 @@ module.exports = {
         try {
             ytConverter.convertAudio({
                 url: url,
-                directoryDownload: __dirname + '\\..\\files\\songs',
+                directoryDownload: __dirname + '/../files/songs',
                 itag: 140
             }, async (perc) => {
                 console.log('\x1b[33m' + perc.toFixed(2) + "%\x1b[0m");
@@ -69,9 +69,9 @@ module.exports = {
 
                     try {
                         if (url == currentUrl) {
-                            fs.renameSync(join(__dirname, '\\..\\files\\songs\\', title) + '.mp3', join(__dirname, '\\..\\files\\songs\\song_' + guildId + '.mp3'));
+                            fs.renameSync(join(__dirname, '/../files/songs/', title) + '.mp3', join(__dirname, '/../files/songs/song_' + guildId + '.mp3'));
                         } else {
-                            fs.unlinkSync(join(__dirname, '\\..\\files\\songs\\', title) + '.mp3');
+                            fs.unlinkSync(join(__dirname, '/../files/songs/', title) + '.mp3');
                         }
                     } catch (err) {
                         console.error(err)
@@ -81,7 +81,7 @@ module.exports = {
 
                     let resource;
                     try {
-                        resource = createAudioResource(join(__dirname, '\\..\\files\\songs\\song_' + guildId + '.mp3'))
+                        resource = createAudioResource(join(__dirname, '/../files/songs/song_' + guildId + '.mp3'))
                     } catch {
                     }
 
@@ -124,7 +124,7 @@ module.exports = {
         console.log('Downloading\x1b[36m', url, '\x1b[0m');
         //Removes old song if there
         try {
-            fs.unlinkSync(join(__dirname, '\\..\\files\\songs\\song_' + guildId + '.mp3'));
+            fs.unlinkSync(join(__dirname, '/../files/songs/song_' + guildId + '.mp3'));
         } catch (err) {
             console.error(err)
         }
@@ -135,11 +135,11 @@ module.exports = {
         console.log('LINK - Creating resource for ' + url)
         await spotify.downloadTrack(url, 'song_' + guildId + '.mp3');
 
-        fs.rename('song_' + guildId + '.mp3', join(__dirname, '\\..\\files\\songs\\song_' + guildId + '.mp3'), (err) => {
+        fs.rename('song_' + guildId + '.mp3', join(__dirname, '/../files/songs/song_' + guildId + '.mp3'), (err) => {
             if (err) throw err;
         });
 
-        let resource = createAudioResource(join(__dirname, '\\..\\files\\songs\\song_' + guildId + '.mp3'));
+        let resource = createAudioResource(join(__dirname, '/../files/songs/song_' + guildId + '.mp3'));
         connection.subscribe(player);
         player.play(resource);
         player.addListener('stateChange', async (oldOne, newOne) => {
