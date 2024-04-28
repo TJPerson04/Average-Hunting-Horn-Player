@@ -51,12 +51,12 @@ module.exports = {
                 }
 
                 const voiceChannelId = interaction.member.voice.channel.id
-                const filePath = `${__dirname}\\..\\files`;
+                const filePath = `${__dirname}/../files`;
                 request(link2, async function (err, response, body) {
                     await download(JSON.parse(body).mp3, filePath)
                         .then(() => {
                             console.log('Download Completed');
-                            playMP3File2(voiceChannelId, interaction.channel.guild, filePath + '\\' + JSON.parse(body).mp3.split('/')[4]); //Formats the filepath properly
+                            playMP3File2(voiceChannelId, interaction.channel.guild, filePath + '/' + JSON.parse(body).mp3.split('/')[4]); //Formats the filepath properly
                         })
                 })
                 await interaction.reply('Be inspired');
@@ -102,15 +102,15 @@ async function playMP3File2(voiceChannelId, guild, filePath) {
                 console.error(err)
             }
 
-            filePath = `${__dirname}\\..\\files`;
+            filePath = `${__dirname}/../files`;
 
             request(link2, async function (err, response, body) {
                 await download(JSON.parse(body).mp3, filePath)
                     .then(() => {
                         console.log('Download Completed');
                         //Plays the newly downloaded quote
-                        player.play(createAudioResource(filePath + '\\' + JSON.parse(body).mp3.split('/')[4]));
-                        filePath = filePath + '\\' + JSON.parse(body).mp3.split('/')[4];
+                        player.play(createAudioResource(filePath + '/' + JSON.parse(body).mp3.split('/')[4]));
+                        filePath = filePath + '/' + JSON.parse(body).mp3.split('/')[4];
                     })
             })
         }

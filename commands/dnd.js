@@ -30,13 +30,13 @@ module.exports = {
 
         switch (song) {
             case 'panic':
-                filePath = join(__dirname, '\\..\\dnd\\LobotomyCorporation_OST_Second_Warning.mp3');
+                filePath = join(__dirname, '/../dnd/LobotomyCorporation_OST_Second_Warning.mp3');
                 break;
             case 'church':
-                filePath = join(__dirname, '\\..\\dnd\\Arknights_OST_bat_white_trans.mp3');
+                filePath = join(__dirname, '/../dnd/Arknights_OST_bat_white_trans.mp3');
                 break;
             case '2':
-                filePath = join(__dirname, '\\..\\dnd\\Arknights_OST_bat_act17side_01.mp3')
+                filePath = join(__dirname, '/../dnd/Arknights_OST_bat_act17side_01.mp3')
                 break;
         }
 

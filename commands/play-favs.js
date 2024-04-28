@@ -26,7 +26,7 @@ module.exports = {
             }
         }
 
-        db = JSON.parse(fs.readFileSync(join(__dirname, '\\..\\favs.json')));
+        db = JSON.parse(fs.readFileSync(join(__dirname, '/../favs.json')));
         
         let message = await interaction.deferReply({ fetchReply: true });
 

@@ -16,7 +16,7 @@ module.exports = {
                 .setDescription('The playlist to save')
                 .setRequired(true)),
     async execute(interaction) {
-        db = JSON.parse(fs.readFileSync(join(__dirname, '\\..\\favs.json')));
+        db = JSON.parse(fs.readFileSync(join(__dirname, '/../favs.json')));
         let isUserInLists = false;
         for (let i = 0; i < db.lists.length; i++) {
             if (db.lists[i][0] == interaction.user.id) {
@@ -27,7 +27,7 @@ module.exports = {
         if (!isUserInLists) {
             db.lists.push([interaction.user.id, interaction.options.getString('url')]);
         }
-        fs.writeFileSync(join(__dirname, '\\..\\favs.json'), JSON.stringify(db))
+        fs.writeFileSync(join(__dirname, '/../favs.json'), JSON.stringify(db))
         interaction.reply('cool')
     }
 }

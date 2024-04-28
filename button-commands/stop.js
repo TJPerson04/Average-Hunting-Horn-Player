@@ -39,7 +39,7 @@ module.exports = {
             //console.log(connection.receiver.voiceConnection.state.subscription.player)
             //connection.destroy();
             if (connection.receiver.voiceConnection.state.subscription) {
-                connection.receiver.voiceConnection.state.subscription.player.play(createAudioResource(join(__dirname, '\\..\\portal_radio.mp3')))
+                connection.receiver.voiceConnection.state.subscription.player.play(createAudioResource(join(__dirname, '/../portal_radio.mp3')))
                 connection.receiver.voiceConnection.state.subscription.player.stop();    
             }
             connection.receiver.voiceConnection.disconnect();

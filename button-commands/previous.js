@@ -20,7 +20,7 @@ module.exports = {
                     break;
                 }
             }
-            connection.receiver.voiceConnection.state.subscription.player.play(createAudioResource(__dirname + '\\..\\portal_radio.mp3')) //Prevents song.mp3 from being busy, allowwing it to be deleted
+            connection.receiver.voiceConnection.state.subscription.player.play(createAudioResource(__dirname + '/../portal_radio.mp3')) //Prevents song.mp3 from being busy, allowwing it to be deleted
             connection.receiver.voiceConnection.state.subscription.player.stop();
             return true
         } else if (!connection) {
