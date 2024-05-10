@@ -1,17 +1,23 @@
 // Libraries
 const { masterQueue, queueIndexes, currentInteraction, currentMessage } = require('../index');
-const { getQueue, isQueueHere, getCurrentInteractionIndex, getCurrentMessageIndex, changeQueueIndex } = require("../helpers/helper_functions");
+const { getQueue, isQueueHere, getCurrentInteractionIndex, getCurrentMessageIndex, changeQueueIndex, getUrlType } = require("../helpers/helper_functions");
 const { playYTVideo, playSpotifySong, addYTPlaylist, addSpotifyPlaylist } = require('../helpers/song_playing');
 
 const { SlashCommandBuilder } = require("discord.js");
 const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
 const Spotify = require('spotifydl-core').default;
+const search = require('youtube-search');
 
 const spotifyCredentials = {
     clientId: process.env.spotifyClientId,
     clientSecret: process.env.spotifyClientSecret
 }
 const spotify = new Spotify(spotifyCredentials);
+
+const searchOpts = {
+    maxResults: 10,
+    key: process.env.GOOGLE_API_KEY
+}
 
 require('dotenv').config();
 
@@ -24,15 +30,11 @@ module.exports = {
         .setDescription('Plays the audio of a youtube video')
         .addStringOption(option =>
             option
-                .setName('url')
-                .setDescription('The youtube video to play')
+                .setName('search')
+                .setDescription('The song to play (either the url or a search term)')
                 .setRequired(true)),
     async execute(interaction) {
-        //TODO:
-        //Be able to look at songs in queue (currently sometimes doesn't show current song playing)
-        //Add ability to play spotify albums as well as playlists
-        //Make currentMessage and currentInteraction able to be used in multiple servers
-
+        // Sends initial "bot is thinking" message (so it doesn't timeout)
         let message = await interaction.deferReply({ fetchReply: true });
 
         //Checks if server has current interaction/message
@@ -87,26 +89,43 @@ module.exports = {
 
         let url = interaction.options.getString('url');
 
-        if (!url.includes('youtube') && !url.includes('spotify') && !url.includes('youtu.be')) {
-            interaction.reply("That's not a valid link");
-            return;
-        }
-
+        // Checks the type/validity of the url
+        let info = getUrlType(url);
+        let urlSite = info[0];
+        let urlType = info[1];
+        let urlID = info[2];
         queue = []
 
-        if (url.includes('playlist') && url.includes('youtube')) {
-            //This is so it doesn't time out waiting for a response, breaking it
-            //await interaction.reply(`Currently playing ${url} (probably)`)
-            addYTPlaylist(interaction.guild.id, interaction.user.id, url)
-        } else if (url.includes('playlist') && url.includes('spotify')) {
-            //await interaction.reply('It prob worked')
-            addSpotifyPlaylist(interaction.guild.id, interaction.user.id, url)
-        } else {
-            if (url.includes('youtu.be')) { //Reformats mobile links
-                url = 'https://www.youtube.com/watch?v=' + url.split('/')[url.split('/').length - 1]
+        // Handles the input being a search term (instead of a url)
+        if (urlSite == null) {
+            await search(url, searchOpts, (err, results) => {  // For some reason the callback function will always run after the code in this file, hence the repeated code
+                if (err) console.err(err);
+
+                url = results[0].link;
+                urlSite = 'YT';
+                urlType = 'song';
+                urlID = results[0].id;
+
+                masterQueue.push([textChannel.guild.id, url, interaction.member]);
+                queue = getQueue(textChannel.guild.id, false);
+
+                if (queue.length == 1) {
+                    currentInteraction.push(interaction);
+                    playYTVideo(interaction.guildId, url);
+                }
+            })
+        } else {  // If the url is an actual url (and not a search term)
+            if (urlSite == 'YT' && urlType == 'playlist') {
+                addYTPlaylist(interaction.guild.id, interaction.user.id, url)
+            } else if (urlSite == 'spotify' && urlType == 'playlist') {
+                addSpotifyPlaylist(interaction.guild.id, interaction.user.id, url)
+            } else if (urlType == 'song') {
+                if (url.includes('youtu.be')) { //Reformats mobile links
+                    url = 'https://www.youtube.com/watch?v=' + urlID;
+                }
+                masterQueue.push([textChannel.guild.id, url, interaction.member]);
+                queue = getQueue(textChannel.guild.id, false)
             }
-            masterQueue.push([textChannel.guild.id, url, interaction.member]);
-            queue = getQueue(textChannel.guild.id, false)
         }
 
         if (queue.length == 1 && !url.includes('playlist')) {

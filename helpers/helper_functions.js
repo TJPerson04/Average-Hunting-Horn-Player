@@ -129,5 +129,61 @@ module.exports = {
     async getYTTitle(url) {
         let info = await getInfo(url);
         return info.title;
+    },
+
+    /**
+     * Gets relevant information about the source of the given url
+     * @param {String} url The url of the video/song
+     * @returns {[String, String, String]} [The site ("YT" or "spotify"), The type of url ("song" or "playlist"), The id]
+     */
+    async getUrlType(url) {
+        let [site, type, id] = [null, null, null];
+
+        if (url.includes('youtube') || url.includes('youtu.be')) {
+            site = 'YT';
+
+            if (url.includes('v=')) {
+                type = 'song';
+                id = url.split('v=')[1];
+                if (id.includes('&')) {
+                    id = id.split('&')[0];
+                }
+            } else if (url.includes('list')) {
+                type = 'playlist';
+                id = url.split('list=')[1];
+            } else if (url.includes('si=')) {
+                type = 'song';
+                id = url.split('youtu.be/')[1];
+                id = id.split('?')[0];
+            } else {
+                type = null;
+                id = null;
+            }
+
+        } else if (url.includes('spotify')) {
+            site = 'spotify';
+
+            if (url.includes('track')) {
+                type = 'song';
+                id = url.split('track/')[1];
+                if (id.includes('?')) {
+                    id = id.split('?')[0];
+                }
+            } else if (url.includes('playlist')) {
+                type = 'playlist';
+                id = url.split('playlist/')[1];
+                if (id.includes('?')) {
+                    id = id.split('?')[0];
+                }
+            } else if (url.includes('album')) {
+                type = 'playlist';
+                id = url.split('album/')[1];
+                if (id.includes('?')) {
+                    id.split('?')[0];
+                }
+            }
+        }
+
+        return [site, type, id];
     }
 }
