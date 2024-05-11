@@ -27,7 +27,7 @@ module.exports = {
         let url = interaction.options.getString('search');
 
         // Checks the type/validity of the url
-        let info = getUrlType(url);
+        let info = await getUrlType(url);
         let urlSite = info[0];
         let urlType = info[1];
         let urlID = info[2];

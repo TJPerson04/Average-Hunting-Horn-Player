@@ -55,7 +55,7 @@ module.exports = {
 
         output = `QUEUE \`\`\`\n`;
         for (let i = queueIndex; i < queueIndex + limit; i++) {
-            output += "\n" + i + ": " + await getYTTitle(queue[i]);
+            output += "\n" + i + ": " + await getYTTitle(queue[i].url);
         }
         output += `\`\`\``;
 

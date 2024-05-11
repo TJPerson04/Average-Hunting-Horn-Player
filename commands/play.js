@@ -90,10 +90,11 @@ module.exports = {
         let url = interaction.options.getString('url');
 
         // Checks the type/validity of the url
-        let info = getUrlType(url);
+        let info = await getUrlType(url);
         let urlSite = info[0];
         let urlType = info[1];
         let urlID = info[2];
+        console.log(info)
         queue = [];
 
         // Handles the input being a search term (instead of a url)
