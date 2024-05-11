@@ -23,7 +23,10 @@ module.exports = {
         .setDescription('Displays the next five songs in the queue - UNDER CONSTRUCTION'),
     async execute(interaction) {
         await interaction.deferReply();
-        let queue = getQueue(interaction.guildId, false);
+        let queue = getQueue(interaction.guildId);
+        for (let i = 0; i < queue.length; i++) {
+            queue[i] = queue[i][0];
+        }
 
         let queueIndex = getQueueIndex(interaction.guildId);
 

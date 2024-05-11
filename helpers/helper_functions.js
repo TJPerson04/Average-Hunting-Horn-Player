@@ -12,21 +12,50 @@ module.exports = {
      * Gets the queue for a specific server
      * If isWithMembers is true, the values in the queue are in the format [url, member]
      * @param {String} guildId The id of the discord server the bot is playing in
-     * @param {boolean} isWithMembers Whether or not the queue should be returned with the member that added each song in the queue
+     * @param {Boolean} isWithMembers Whether or not the returned queue should include the member id
      * @returns {Array<String>} An array of the urls of the songs in the queue
      */
-    getQueue(guildId, isWithMembers) {
-        let queue = []
-        for (let i = 0; i < masterQueue.length; i++) {
-            if (masterQueue[i][0] == guildId) {
-                if (isWithMembers) {
-                    queue.push([masterQueue[i][1], masterQueue[i][2]]);
-                } else {
-                    queue.push(masterQueue[i][1]);
-                }
+    getQueue(guildId, isWithMembers = false) {
+        // if (!isWithMembers) {
+        //     queue = masterQueue[guildId];
+        //     for (let i = 0; i < queue.length; i++) {
+        //         queue[i] = queue[i].url;
+        //     }
+        //     return queue;
+        // }
+        return masterQueue[guildId];
+    },
+
+    /**
+     * Adds the given entry to the master queue
+     * @param {String} guildId The id of the server
+     * @param {String} url The url of the song
+     * @param {String} memberId The id of the member who added the song
+     * @param {null} [index=null] The index in the queue to put it (if none is given it is added at the end of the queue)
+     */
+    addToMasterQueue(guildId, url, memberId, index = null) {
+        if (masterQueue[guildId]) {
+            if (!index) {
+                masterQueue[guildId].push({
+                    url: url, 
+                    memberId: memberId
+            });
+            } else {
+                masterQueue[guildId].splice(index, 0, {url: url, memberId: memberId});
             }
+        } else {
+            masterQueue[guildId] = [{
+                url: url, 
+                memberId: memberId
+            }]
+            console.log('In addToMasterQueue: ' + masterQueue[guildId][0].memberId);
         }
-        return queue;
+    },
+
+    removeFromMasterQueue(guildId) {
+        if (masterQueue[guildId]) {
+            masterQueue[guildId] = [{}]
+        }
     },
 
     // Returns an object of the user who submitted the song that is currently playing
@@ -38,7 +67,9 @@ module.exports = {
     async getCurrentSongOwner(guildId) {
         let queue = module.exports.getQueue(guildId, true);
         let queueIndex = module.exports.getQueueIndex(guildId);
-        let memberId = queue[queueIndex][1];
+        // console.log(queue);
+        // console.log(queueIndex);
+        let memberId = queue[queueIndex].memberId;
         let guild = await client.guilds.fetch(guildId);
         let member = await guild.members.fetch(memberId);
 
@@ -51,12 +82,7 @@ module.exports = {
      * @returns {boolean}
      */
     isQueueHere(guildId) {
-        for (let i = 0; i < queueIndexes.length; i++) {
-            if (queueIndexes[i][1] == guildId) {
-                return true
-            }
-        }
-        return false
+        return !!queueIndexes[guildId];
     },
 
     /**
@@ -65,13 +91,7 @@ module.exports = {
      * @returns {Number}
      */
     getQueueIndex(guildId) {
-        for (let i = 0; i < queueIndexes.length; i++) {
-            if (queueIndexes[i][1] == guildId) {
-                return queueIndexes[i][0];
-            }
-        }
-
-        return 0;
+        return queueIndexes[guildId];
     },
 
     /**
@@ -111,13 +131,7 @@ module.exports = {
      * @returns {Number} The new index
      */
     changeQueueIndex(guildId, newIndex) {
-        for (let i = 0; i < queueIndexes.length; i++) {
-            if (queueIndexes[i][1] == guildId) {
-                queueIndexes[i][0] = newIndex;
-                return queueIndexes[i][0];
-            }
-        }
-
+        queueIndexes[guildId] = newIndex;
         return 0;
     },
 

@@ -1,5 +1,5 @@
 // Libraries
-const { getQueue } = require("../helpers/helper_functions");
+const { getQueue, addToMasterQueue, removeFromMasterQueue } = require("../helpers/helper_functions");
 
 const { SlashCommandBuilder } = require("discord.js");
 const { masterQueue } = require("..");
@@ -15,12 +15,7 @@ module.exports = {
         let queue = getQueue(interaction.guildId, true);
 
         //Removes queue from masterQueue
-        for (let i = 0; i < masterQueue.length; i++) {
-            if (masterQueue[i][0] == interaction.guildId) {
-                masterQueue.splice(i, 1);
-                i = -1; //So that it will increment to 0 for the next run
-            }
-        }
+        removeFromMasterQueue(interaction.guildId);
 
         let people = []
         for (let i = 0; i < queue.length; i++) {
@@ -41,7 +36,7 @@ module.exports = {
         }
 
         let newQueue = []
-        console.log(queue.length)
+        // console.log(queue.length)
         for (let i = 0; i < queue.length; i++) {
             for (let j = 0; j < diffQueues.length; j++) {
                 if (diffQueues[j][i]) {
@@ -51,7 +46,7 @@ module.exports = {
         }
 
         for (let i = 0; i < newQueue.length; i++) {
-            masterQueue.push([interaction.guildId, newQueue[i][0], newQueue[i][1]])
+            addToMasterQueue(interaction.guildId, newQueue[i][0], newQueue[i][1]);
         }
 
         console.log('Spread queue between ' + people.length + ' people');

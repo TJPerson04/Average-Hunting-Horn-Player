@@ -1,6 +1,6 @@
 // Libraries
 const { masterQueue, isInspirationPlaying, currentInteraction, currentMessage } = require('../index');
-const { getCurrentMessageIndex, getCurrentInteractionIndex } = require("../helpers/helper_functions");
+const { getCurrentMessageIndex, getCurrentInteractionIndex, removeFromMasterQueue } = require("../helpers/helper_functions");
 
 const { createAudioResource, getVoiceConnection } = require('@discordjs/voice')
 const { join } = require('node:path');
@@ -13,12 +13,7 @@ module.exports = {
         const connection = getVoiceConnection(interaction.guildId);
 
         //Removes queue from masterQueue
-        for (let i = 0; i < masterQueue.length; i++) {
-            if (masterQueue[i][0] == interaction.guildId) {
-                masterQueue.splice(i, 1);
-                i = -1;
-            }
-        }
+        removeFromMasterQueue(interaction.guildId);
 
         //Removes current message & current index
         let currentMessageIndex = getCurrentMessageIndex(interaction.guildId);

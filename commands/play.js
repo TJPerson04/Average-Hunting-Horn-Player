@@ -1,6 +1,6 @@
 // Libraries
 const { masterQueue, queueIndexes, currentInteraction, currentMessage } = require('../index');
-const { getQueue, isQueueHere, getCurrentInteractionIndex, getCurrentMessageIndex, changeQueueIndex, getUrlType } = require("../helpers/helper_functions");
+const { getQueue, isQueueHere, getCurrentInteractionIndex, getCurrentMessageIndex, changeQueueIndex, getUrlType, addToMasterQueue } = require("../helpers/helper_functions");
 const { playYTVideo, playSpotifySong, addYTPlaylist, addSpotifyPlaylist } = require('../helpers/song_playing');
 
 const { SlashCommandBuilder } = require("discord.js");
@@ -30,7 +30,7 @@ module.exports = {
         .setDescription('Plays the audio of a youtube video')
         .addStringOption(option =>
             option
-                .setName('search')
+                .setName('url')
                 .setDescription('The song to play (either the url or a search term)')
                 .setRequired(true)),
     async execute(interaction) {
@@ -46,7 +46,7 @@ module.exports = {
         currentMessageIndex ? currentMessage[currentMessageIndex][1] = message : currentMessage.push([interaction.guildId, message]);
 
         if (!isQueueHere(interaction.guildId)) {
-            queueIndexes.push([0, interaction.guildId]);
+            queueIndexes[interaction.guildId] = 0;
         } else {
             if (getQueue(interaction.guildId).length == 0) {
                 changeQueueIndex(interaction.guildId, 0);
@@ -58,7 +58,7 @@ module.exports = {
         if (interaction.member.voice.channel) {
             voiceChannelId = interaction.member.voice.channel.id;
         } else {
-            await interaction.reply('You must be in a voice channel to use this command');
+            await interaction.editReply('You must be in a voice channel to use this command');
             return;
         }
 
@@ -94,20 +94,21 @@ module.exports = {
         let urlSite = info[0];
         let urlType = info[1];
         let urlID = info[2];
-        queue = []
+        queue = [];
 
         // Handles the input being a search term (instead of a url)
         if (urlSite == null) {
             await search(url, searchOpts, (err, results) => {  // For some reason the callback function will always run after the code in this file, hence the repeated code
-                if (err) console.err(err);
+                if (err) console.error(err);
 
+                // console.log(results);
                 url = results[0].link;
                 urlSite = 'YT';
                 urlType = 'song';
                 urlID = results[0].id;
 
-                masterQueue.push([textChannel.guild.id, url, interaction.member]);
-                queue = getQueue(textChannel.guild.id, false);
+                addToMasterQueue(textChannel.guild.id, url, interaction.member);
+                queue = getQueue(textChannel.guild.id);
 
                 if (queue.length == 1) {
                     currentInteraction.push(interaction);
@@ -123,8 +124,8 @@ module.exports = {
                 if (url.includes('youtu.be')) { //Reformats mobile links
                     url = 'https://www.youtube.com/watch?v=' + urlID;
                 }
-                masterQueue.push([textChannel.guild.id, url, interaction.member]);
-                queue = getQueue(textChannel.guild.id, false)
+                addToMasterQueue(textChannel.guild.id, url, interaction.member);
+                queue = getQueue(textChannel.guild.id);
             }
         }
 

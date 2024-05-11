@@ -1,4 +1,7 @@
 // Libraries
+const { masterQueue } = require('../index.js');
+const { getQueueIndex } = require('../helpers/helper_functions.js');
+
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, getVoiceConnection } = require('@discordjs/voice'); 
 const { SlashCommandBuilder } = require("discord.js");
 const { join } = require('node:path');

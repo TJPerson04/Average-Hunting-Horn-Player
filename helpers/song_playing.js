@@ -1,7 +1,7 @@
 // Libraries
 const { masterQueue, queueIndexes, isLooping, } = require('../index');
 const {displayDownloadPercent, manageDisplay} = require('./display');
-const { getQueue, getQueueIndex } = require('./helper_functions');
+const { getQueue, getQueueIndex, removeFromMasterQueue, addToMasterQueue } = require('./helper_functions');
 
 const { createAudioPlayer, createAudioResource, getVoiceConnection, AudioPlayer } = require('@discordjs/voice');
 const PlaylistSummary = require('youtube-playlist-summary');
@@ -28,7 +28,7 @@ module.exports = {
         console.log('Downloading\x1b[36m', url, '\x1b[0m');
 
         
-        let connection = getVoiceConnection(guildId)
+        let connection = getVoiceConnection(guildId);
         const player = createAudioPlayer();
 
         //Removes old song if there
@@ -64,8 +64,8 @@ module.exports = {
 
                     //Makes sure that if the skip/previous button is spammed, only the correct song actually plays
                     //Doesn't really work that well tbh (It said "this.getQueue is not a function")
-                    let queue = getQueue(guildId, false);
-                    let currentUrl = queue[getQueueIndex(guildId)];
+                    let queue = getQueue(guildId);
+                    let currentUrl = queue[getQueueIndex(guildId)].url;
 
                     try {
                         if (url == currentUrl) {
@@ -82,7 +82,8 @@ module.exports = {
                     let resource;
                     try {
                         resource = createAudioResource(join(__dirname, '/../files/songs/song_' + guildId + '.mp3'))
-                    } catch {
+                    } catch (err) {
+                        console.log(err);
                     }
 
                     connection.subscribe(player);
@@ -157,25 +158,17 @@ module.exports = {
      */
     async playNextSong(guildId) {
         //Increses the index of the queue by 1
-        let queueIndex = 0;
-        for (let i = 0; i < queueIndexes.length; i++) {
-            if (queueIndexes[i][1] == guildId) {
-                queueIndexes[i][0]++;
-                queueIndex = queueIndexes[i][0];
-                break;
-            }
-        }
+        let queueIndex = ++queueIndexes[guildId];
 
         //Re-defines server specific queue based on masterQueue
-        queue = getQueue(guildId, false);
-        console.log(queueIndex);
+        queue = getQueue(guildId);
         let connection = getVoiceConnection(guildId);
 
         if (queueIndex < queue.length) {
-            if (queue[queueIndex].includes('youtube')) {
-                await module.exports.playYTVideo(guildId, queue[queueIndex]);
-            } else if (queue[queueIndex].includes('spotify')) {
-                module.exports.playSpotifySong(guildId, queue[queueIndex]);
+            if (queue[queueIndex].url.includes('youtube')) {
+                await module.exports.playYTVideo(guildId, queue[queueIndex].url);
+            } else if (queue[queueIndex].url.includes('spotify')) {
+                module.exports.playSpotifySong(guildId, queue[queueIndex].url);
             }
             console.log('Moving to next song');
         } else {
@@ -207,12 +200,7 @@ module.exports = {
                 }
 
                 // Clears queue
-                for (let i = 0; i < masterQueue.length; i++) {
-                    if (masterQueue[i][0] == guildId) {
-                        masterQueue.splice(i, 1);
-                        i = 0;
-                    }
-                }
+                removeFromMasterQueue(guildId);
                 connection.disconnect();
                 connection.destroy();
             }
@@ -236,14 +224,14 @@ module.exports = {
 
         await ps.getPlaylistItems(PLAY_LIST_ID)
             .then(async (result) => {
-                queue = getQueue(guildId, false)
+                queue = getQueue(guildId)
 
                 if (queue.length == 0) {
                     await module.exports.playYTVideo(guildId, result.items[0].videoUrl);
                 }
 
                 for (let i = 0; i < result.items.length; i++) {
-                    masterQueue.push([guildId, result.items[i].videoUrl, userId]);
+                    addToMasterQueue(guildId, result.items[i].videoUrl, userId);
                 }
             })
             .catch((error) => {
@@ -259,7 +247,7 @@ module.exports = {
      */
     async addSpotifyPlaylist(guildId, userId, url) {
         await spotify.getPlaylist(url).then(async (result) => {
-            queue = getQueue(guildId, false)
+            queue = getQueue(guildId)
             let tracks = result.tracks;
 
             if (queue.length == 0) {
@@ -267,7 +255,7 @@ module.exports = {
             }
 
             for (let i = 0; i < tracks.length; i++) {
-                masterQueue.push([guildId, 'https://open.spotify.com/track/' + tracks[i], userId])
+                addToMasterQueue(guildId, 'https://open.spotify.com/track/' + tracks[i], userId);
             }
         })
             .catch((error) => {

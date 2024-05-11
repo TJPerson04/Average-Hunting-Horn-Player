@@ -19,7 +19,7 @@ module.exports = {
         .setDescription('Plays the playlists of everyone in a vc'),
     async execute(interaction) {
         if (!isQueueHere(interaction.guildId)) {
-            queueIndexes.push([0, interaction.guildId]);
+            queueIndexes[interaction.guildId] = 0;
         } else {
             if (getQueue(interaction.guildId).length == 0) {
                 changeQueueIndex(interaction.guildId, 0);
