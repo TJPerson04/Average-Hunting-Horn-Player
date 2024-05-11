@@ -24,19 +24,16 @@ module.exports = {
     async execute(interaction) {
         await interaction.deferReply();
         let queue = getQueue(interaction.guildId);
-        for (let i = 0; i < queue.length; i++) {
-            queue[i] = queue[i][0];
-        }
 
         let queueIndex = getQueueIndex(interaction.guildId);
 
         let videoIds = []
         for (let i = 0; i < queue.length; i++) {
             let videoId;
-            if (queue[i].includes('spotify')) {
-                videoId = queue[i]
+            if (queue[i].url.includes('spotify')) {
+                videoId = queue[i].url
             } else {
-                videoId = queue[i].split('v=')[1]
+                videoId = queue[i].url.split('v=')[1]
                 if (videoId.includes('&')) {
                     videoId = videoId.split('&')[0]
                 }
