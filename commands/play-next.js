@@ -4,12 +4,12 @@ const { masterQueue } = require('../index');
 const { getUrlType, getQueueIndex } = require("../helpers/helper_functions");
 
 const { SlashCommandBuilder } = require("discord.js");
-const search = require('youtube-search');
+// const search = require('youtube-search');
 
-const searchOpts = {
-    maxResults: 10,
-    key: process.env.GOOGLE_API_KEY
-}
+// const searchOpts = {
+//     maxResults: 10,
+//     key: process.env.GOOGLE_API_KEY
+// }
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -35,16 +35,16 @@ module.exports = {
 
         // Handles the input being a search term (instead of a url)
         if (urlSite == null) {
-            await search(url, searchOpts, (err, results) => {  // For some reason the callback function will always run after the code in this file, hence the repeated code
-                if (err) console.err(err);
+            // await search(url, searchOpts, (err, results) => {  // For some reason the callback function will always run after the code in this file, hence the repeated code
+            //     if (err) console.err(err);
 
-                url = results[0].link;
-                urlSite = 'YT';
-                urlType = 'song';
-                urlID = results[0].id;
+            //     url = results[0].link;
+            //     urlSite = 'YT';
+            //     urlType = 'song';
+            //     urlID = results[0].id;
 
-                masterQueue[guildId].splice(queueIndex + 1, 0, {url: url, memberId: interaction.member});
-            })
+            //     masterQueue[guildId].splice(queueIndex + 1, 0, {url: url, memberId: interaction.member});
+            // })
         } else {
             masterQueue[guildId].splice(queueIndex + 1, 0, {url: url, memberId: interaction.member});
         }
