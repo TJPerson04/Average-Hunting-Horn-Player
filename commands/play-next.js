@@ -1,7 +1,7 @@
 // Libraries
 const play = require('./play');
-const { masterQueue, queueIndexes, currentInteraction, currentMessage } = require('../index');
-const { addToMasterQueue, getQueue, isQueueHere, getCurrentInteractionIndex, getCurrentMessageIndex, changeQueueIndex, getUrlType, getQueueIndex } = require("../helpers/helper_functions");
+const { masterQueue } = require('../index');
+const { getUrlType, getQueueIndex } = require("../helpers/helper_functions");
 
 const { SlashCommandBuilder } = require("discord.js");
 const search = require('youtube-search');
