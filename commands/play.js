@@ -132,9 +132,9 @@ module.exports = {
         }
 
         queue = getQueue(textChannel.guild.id);
-        console.log('QUEUE')
-        console.log(queue);
-        console.log("queue length: " + queue.length);
+        // console.log('QUEUE');
+        // console.log(queue);
+        // console.log("queue length: " + queue.length);
 
         if (queue.length <= 1 && urlType != 'playlist') {
             if (urlSite == 'spotify') {
