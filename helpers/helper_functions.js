@@ -54,7 +54,8 @@ module.exports = {
 
     removeFromMasterQueue(guildId) {
         if (masterQueue[guildId]) {
-            masterQueue[guildId] = [{}]
+            masterQueue[guildId] = []
+            queueIndexes[guildId] = 0;
         }
     },
 
@@ -101,7 +102,7 @@ module.exports = {
      */
     getCurrentInteractionIndex(guildId) {
         for (let i = 0; i < currentInteraction.length; i++) {
-            if (currentInteraction[i][0] == guildId) {
+            if (currentInteraction[i] && currentInteraction[i][0] == guildId) {
                 return i;
             }
         }
@@ -116,7 +117,7 @@ module.exports = {
      */
     getCurrentMessageIndex(guildId) {
         for (let i = 0; i < currentMessage.length; i++) {
-            if (currentMessage[i][0] == guildId) {
+            if (currentMessage[i] && currentMessage[i][0] == guildId) {
                 return i;
             }
         }

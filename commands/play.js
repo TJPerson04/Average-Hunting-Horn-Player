@@ -94,7 +94,9 @@ module.exports = {
         let urlSite = info[0];
         let urlType = info[1];
         let urlID = info[2];
-        console.log(info)
+        console.log(info);
+        console.log(queueIndexes[interaction.guildId]);
+        console.log(masterQueue);
         queue = [];
 
         // Handles the input being a search term (instead of a url)
@@ -126,21 +128,24 @@ module.exports = {
                     url = 'https://www.youtube.com/watch?v=' + urlID;
                 }
                 addToMasterQueue(textChannel.guild.id, url, interaction.member);
-                queue = getQueue(textChannel.guild.id);
             }
         }
 
-        if (queue.length == 1 && !url.includes('playlist')) {
-            if (url.includes('spotify')) {
+        queue = getQueue(textChannel.guild.id);
+        console.log('QUEUE')
+        console.log(queue);
+        console.log("queue length: " + queue.length);
+
+        if (queue.length <= 1 && urlType != 'playlist') {
+            if (urlSite == 'spotify') {
                 currentInteraction.push(interaction);
                 playSpotifySong(interaction.guildId, url);
-            } else {
+            } else if (urlSite == 'YT') {
                 currentInteraction.push(interaction);
                 playYTVideo(interaction.guildId, url);
+            } else {
             }
-        }
-
-        if (currentInteraction[currentInteractionIndex] && currentInteraction[currentInteractionIndex][1] != interaction) {
+        } else {
             interaction.editReply('Added Song')
             setTimeout(() => {
                 interaction.deleteReply()
