@@ -136,7 +136,7 @@ module.exports = {
         // console.log(queue);
         // console.log("queue length: " + queue.length);
 
-        if (queue.length <= 1 && urlType != 'playlist') {
+        if ((!queue || queue.length <= 1) && urlType != 'playlist') {
             if (urlSite == 'spotify') {
                 currentInteraction.push(interaction);
                 playSpotifySong(interaction.guildId, url);
@@ -145,6 +145,8 @@ module.exports = {
                 playYTVideo(interaction.guildId, url);
             } else {
             }
+        } else if (!queue || queue.length <= 1) {
+            currentInteraction.push(interaction);
         } else {
             interaction.editReply('Added Song')
             setTimeout(() => {

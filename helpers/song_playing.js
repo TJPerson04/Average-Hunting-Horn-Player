@@ -226,7 +226,7 @@ module.exports = {
             .then(async (result) => {
                 queue = getQueue(guildId)
 
-                if (queue.length == 0) {
+                if (!queue || queue.length <= 1) {
                     await module.exports.playYTVideo(guildId, result.items[0].videoUrl);
                 }
 
