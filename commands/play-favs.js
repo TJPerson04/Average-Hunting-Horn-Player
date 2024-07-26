@@ -82,6 +82,6 @@ module.exports = {
         
 
         shuffle.execute(interaction);
-        equality.execute(interaction);
+        // equality.execute(interaction);
     }
 }
