@@ -139,7 +139,7 @@ module.exports = {
     /**
      * Gets the title of the given Youtube video
      * @param {String} url The url of the video
-     * @returns {String} The title of the video
+     * @returns {Promise<String>} The title of the video
      */
     async getYTTitle(url) {
         let info = await getInfo(url);
