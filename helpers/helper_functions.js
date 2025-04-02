@@ -37,15 +37,15 @@ module.exports = {
         if (masterQueue[guildId]) {
             if (!index) {
                 masterQueue[guildId].push({
-                    url: url, 
+                    url: url,
                     memberId: memberId
-            });
+                });
             } else {
-                masterQueue[guildId].splice(index, 0, {url: url, memberId: memberId});
+                masterQueue[guildId].splice(index, 0, { url: url, memberId: memberId });
             }
         } else {
             masterQueue[guildId] = [{
-                url: url, 
+                url: url,
                 memberId: memberId
             }]
             console.log('In addToMasterQueue: ' + masterQueue[guildId][0].memberId);
@@ -63,7 +63,7 @@ module.exports = {
     /**
      * Gets the member who submitted the song that is currently playing
      * @param {String} guildId The id of the discord server the bot is playing in
-     * @returns {GuildMember}
+     * @returns {Promise<GuildMember>}
      */
     async getCurrentSongOwner(guildId) {
         let queue = module.exports.getQueue(guildId, true);
@@ -149,7 +149,7 @@ module.exports = {
     /**
      * Gets relevant information about the source of the given url
      * @param {String} url The url of the video/song
-     * @returns {[String, String, String]} [The site ("YT" or "spotify"), The type of url ("song" or "playlist"), The id]
+     * @returns {Promise<[String, String, String]>} [The site ("YT" or "spotify"), The type of url ("song" or "playlist"), The id]
      */
     async getUrlType(url) {
         let [site, type, id] = [null, null, null];
@@ -157,15 +157,15 @@ module.exports = {
         if (url.includes('youtube') || url.includes('youtu.be')) {
             site = 'YT';
 
-            if (url.includes('v=')) {
+            if (url.includes('list')) {
+                type = 'playlist';
+                id = url.split('list=')[1];
+            } else if (url.includes('v=')) {
                 type = 'song';
                 id = url.split('v=')[1];
                 if (id.includes('&')) {
                     id = id.split('&')[0];
                 }
-            } else if (url.includes('list')) {
-                type = 'playlist';
-                id = url.split('list=')[1];
             } else if (url.includes('si=')) {
                 type = 'song';
                 id = url.split('youtu.be/')[1];

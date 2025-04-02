@@ -1,7 +1,7 @@
 // Libraries
 const play = require('./play');
 const { masterQueue } = require('../index');
-const { getUrlType, getQueueIndex } = require("../helpers/helper_functions");
+const { getUrlType, getQueueIndex, addToMasterQueue } = require("../helpers/helper_functions");
 
 const { SlashCommandBuilder } = require("discord.js");
 // const search = require('youtube-search');
@@ -45,8 +45,17 @@ module.exports = {
 
             //     masterQueue[guildId].splice(queueIndex + 1, 0, {url: url, memberId: interaction.member});
             // })
-        } else {
-            masterQueue[guildId].splice(queueIndex + 1, 0, {url: url, memberId: interaction.member});
+        } else {  // If the url is an actual url (and not a search term)
+            if (urlSite == 'YT' && urlType == 'playlist') {
+                addYTPlaylist(interaction.guild.id, interaction.user.id, url)
+            } else if (urlSite == 'spotify' && urlType == 'playlist') {
+                addSpotifyPlaylist(interaction.guild.id, interaction.user.id, url)
+            } else if (urlType == 'song') {
+                if (url.includes('youtu.be')) { //Reformats mobile links
+                    url = 'https://www.youtube.com/watch?v=' + urlID;
+                }
+                addToMasterQueue(textChannel.guild.id, url, interaction.member);
+            }
         }
 
 

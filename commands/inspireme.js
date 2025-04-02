@@ -59,7 +59,9 @@ module.exports = {
                             playMP3File2(voiceChannelId, interaction.channel.guild, filePath + '/' + JSON.parse(body).mp3.split('/')[4]); //Formats the filepath properly
                         })
                 })
-                await interaction.reply('Be inspired');
+                await interaction.reply('Be inspired')
+                const message = await interaction.fetchReply();
+                console.log(message);
             } else {
                 await interaction.reply('You must be in the voice channel to use this command');
             }

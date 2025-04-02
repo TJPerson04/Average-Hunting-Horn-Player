@@ -1,11 +1,13 @@
 // Libraries
 const { masterQueue, queueIndexes, isLooping, } = require('../index');
-const {displayDownloadPercent, manageDisplay} = require('./display');
+const { displayDownloadPercent, manageDisplay } = require('./display');
 const { getQueue, getQueueIndex, removeFromMasterQueue, addToMasterQueue } = require('./helper_functions');
 
 const { createAudioPlayer, createAudioResource, getVoiceConnection, AudioPlayer } = require('@discordjs/voice');
 const PlaylistSummary = require('youtube-playlist-summary');
 const ytConverter = require('yt-converter');
+// const { Audio, Video } = require('yt-converter');
+const { YtDlp } = require('ytdlp-nodejs');
 const fs = require('fs');
 const { join } = require('node:path');
 const Spotify = require('spotifydl-core').default
@@ -15,6 +17,8 @@ const spotifyCredentials = {
     clientSecret: process.env.spotifyClientSecret
 }
 const spotify = new Spotify(spotifyCredentials);
+
+const ytdlp = new YtDlp();
 
 
 module.exports = {
@@ -27,7 +31,7 @@ module.exports = {
     async playYTVideo(guildId, url) {
         console.log('Downloading\x1b[36m', url, '\x1b[0m');
 
-        
+
         let connection = getVoiceConnection(guildId);
         const player = createAudioPlayer();
 
@@ -41,72 +45,84 @@ module.exports = {
 
         //Downloads youtube url as mp3, then turns that into an audio resource that works w/ connection
         try {
-            ytConverter.convertAudio({
-                url: url,
-                directoryDownload: __dirname + '/../files/songs',
-                itag: 140
-            }, async (perc) => {
-                console.log('\x1b[33m' + perc.toFixed(2) + "%\x1b[0m");
-                await ytConverter.getInfo(url).then(async info => {
-                    let thumbnailUrl = info.thumbnails[info.thumbnails.length - 1].url
-                    let singer = info.author.name
-                    let channelUrl = info.author.channel_url
-                    if (singer.includes("- Topic")) {
-                        singer = singer.replaceAll("- Topic", "")  // For some reason a lot of the authors have "- Topic" at the end and it is annoying
+            const data = await ytdlp.downloadAsync(
+                url,
+                {
+                    onProgress: async (res) => {
+                        let perc = res.percentage;
+                        console.log('\x1b[33m' + perc.toFixed(2) + "%\x1b[0m");
+                        await ytConverter.getInfo(url).then(async info => {
+                            let thumbnailUrl = info.thumbnails[info.thumbnails.length - 1].url
+                            let singer = info.author.name
+                            let channelUrl = info.author.channel_url
+                            if (singer.includes("- Topic")) {
+                                singer = singer.replaceAll("- Topic", "")  // For some reason a lot of the authors have "- Topic" at the end and it is annoying
+                            }
+                            displayDownloadPercent(perc, guildId, url, info.title, thumbnailUrl, singer, channelUrl)
+                        })
+                    },
+                    format: {
+                        filter: 'audioonly',
                     }
-                    displayDownloadPercent(perc, guildId, url, info.title, thumbnailUrl, singer, channelUrl)
                 })
-            }, async () => {
-                await ytConverter.getInfo(url).then(async info => {
-                    let titleOrig = info.title;
-                    //Downloaded files can't handle colons, so this removes them
-                    title = titleOrig.replaceAll(':', '').replaceAll('|', '').replaceAll(',', '').replaceAll('\\', '').replaceAll('/', '').replaceAll('?', '').replaceAll('"', '').replaceAll('*', '');
+            console.log('----------DATA----------');
+            let titleActual = data.split('[ExtractAudio] Destination: ')[1].split('.mp3')[0];
+            console.log(titleActual);
+            await ytConverter.getInfo(url).then(async info => {
+                let titleOrig = info.title;
+                //Downloaded files can't handle colons, so this removes them
+                // title = titleOrig.replaceAll(':', '').replaceAll('|', '').replaceAll(',', '').replaceAll('\\', '').replaceAll('/', '').replaceAll('?', '').replaceAll('"', '').replaceAll('*', '');
 
-                    //Makes sure that if the skip/previous button is spammed, only the correct song actually plays
-                    //Doesn't really work that well tbh (It said "this.getQueue is not a function")
-                    let queue = getQueue(guildId);
-                    let currentUrl = queue[getQueueIndex(guildId)].url;
+                title = titleActual;
 
-                    try {
-                        if (url == currentUrl) {
-                            fs.renameSync(join(__dirname, '/../files/songs/', title) + '.mp3', join(__dirname, '/../files/songs/song_' + guildId + '.mp3'));
-                        } else {
-                            fs.unlinkSync(join(__dirname, '/../files/songs/', title) + '.mp3');
-                        }
-                    } catch (err) {
-                        console.error(err)
+                //Makes sure that if the skip/previous button is spammed, only the correct song actually plays
+                //Doesn't really work that well tbh (It said "this.getQueue is not a function")
+                let queue = getQueue(guildId);
+                let currentUrl = queue[getQueueIndex(guildId)].url;
+
+                try {
+                    if (url == currentUrl) {
+                        // fs.renameSync(join(__dirname, '/../files/songs/', title) + '.mp3', join(__dirname, '/../files/songs/song_' + guildId + '.mp3'));
+                        fs.renameSync(join(__dirname, '/../', title) + '.mp3', join(__dirname, '/../files/songs/song_' + guildId + '.mp3'));
+                    } else {
+                        // fs.unlinkSync(join(__dirname, '/../files/songs/', title) + '.mp3');
+                        fs.unlinkSync(join(__dirname, '/../', title) + '.mp3');
                     }
+                } catch (err) {
+                    console.error(err)
+                }
 
 
 
-                    let resource;
-                    try {
-                        resource = createAudioResource(join(__dirname, '/../files/songs/song_' + guildId + '.mp3'))
-                    } catch (err) {
-                        console.log(err);
+                let resource;
+                try {
+                    resource = createAudioResource(join(__dirname, '/../files/songs/song_' + guildId + '.mp3'))
+                } catch (err) {
+                    console.log(err);
+                }
+
+                connection.subscribe(player);
+                player.play(resource);
+                console.log('Now playing \x1b[36m' + url + '\x1b[0m')
+                player.addListener('stateChange', async (oldOne, newOne) => {
+                    if (newOne.status == "idle") {
+                        module.exports.playNextSong(guildId);
                     }
+                })
 
-                    connection.subscribe(player);
-                    player.play(resource);
-                    console.log('Now playing \x1b[36m' + url + '\x1b[0m')
-                    player.addListener('stateChange', async (oldOne, newOne) => {
-                        if (newOne.status == "idle") {
-                            module.exports.playNextSong(guildId);
-                        }
-                    })
+                let thumbnailUrl = info.thumbnails[info.thumbnails.length - 1].url
+                let singer = info.author.name
+                let channelUrl = info.author.channel_url
+                if (singer.includes("- Topic")) {
+                    singer = singer.replaceAll("- Topic", "")  // For some reason a lot of the authors have "- Topic" at the end and it is annoying
+                }
 
-                    let thumbnailUrl = info.thumbnails[info.thumbnails.length - 1].url
-                    let singer = info.author.name
-                    let channelUrl = info.author.channel_url
-                    if (singer.includes("- Topic")) {
-                        singer = singer.replaceAll("- Topic", "")  // For some reason a lot of the authors have "- Topic" at the end and it is annoying
-                    }
-
-                    manageDisplay(url, guildId, titleOrig, thumbnailUrl, singer, channelUrl);
-                });
-            })
-        } catch {
-            this.playYTVideo(guildId, url)
+                manageDisplay(url, guildId, titleOrig, thumbnailUrl, singer, channelUrl);
+            });
+        } catch (err) {
+            console.log(err);
+            // THIS SHOULD INCREMENT THE QUEUE INDEX
+            module.exports.playYTVideo(guildId, url)
         }
 
 
@@ -224,10 +240,12 @@ module.exports = {
 
         await ps.getPlaylistItems(PLAY_LIST_ID)
             .then(async (result) => {
+                console.log('----------PLAYLIST----------');
+                console.log(PLAY_LIST_ID);
                 queue = getQueue(guildId)
 
                 if (!queue || queue.length <= 1) {
-                    await module.exports.playYTVideo(guildId, result.items[0].videoUrl);
+                    module.exports.playYTVideo(guildId, result.items[0].videoUrl);
                 }
 
                 for (let i = 0; i < result.items.length; i++) {
